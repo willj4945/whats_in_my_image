@@ -158,7 +158,7 @@ jobs:
             --base "Red Hat UBI 9 Python 3.12=${BASE_IMAGE}" \
             --app-name "wimi ${VERSION} release build" \
             --subtitle "Provenance of the wimi ${VERSION} container image" \
-            --scan trivy -o report --formats html json
+            --scan trivy -o report --formats html,json
           cp report/*.html "release/wimi-${VERSION}-image-provenance.html"
           cp report/*.json "release/wimi-${VERSION}-image-provenance.json"
 

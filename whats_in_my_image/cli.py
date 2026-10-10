@@ -61,6 +61,17 @@ EPILOG = textwrap.dedent("""\
 """)
 
 
+FORMATS = ("html", "json", "csv")
+
+
+def _formats(value: str) -> list[str]:
+    fmts = [f.strip().lower() for f in value.split(",") if f.strip()]
+    bad = [f for f in fmts if f not in FORMATS]
+    if bad or not fmts:
+        raise argparse.ArgumentTypeError(f"choose from {', '.join(FORMATS)}, comma separated (got {value!r})")
+    return fmts
+
+
 def _parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="wimi",
@@ -118,10 +129,10 @@ def _parser() -> argparse.ArgumentParser:
     g.add_argument("-o", "--output-dir", type=Path, default=Path("wimi-reports"))
     g.add_argument(
         "--formats",
-        choices=["html", "json", "csv"],
-        nargs="*",
-        default=["html", "json", "csv"],
-        help="Output report in one or more supported formats (default: %(default)s)",
+        type=_formats,
+        action="extend",
+        metavar="FORMAT[,FORMAT...]",
+        help="report formats to write: html, json, csv, comma separated or repeated (default: all three)",
     )
     g.add_argument(
         "--subtitle",
@@ -295,7 +306,7 @@ def main(argv: list[str] | None = None) -> int:
     # ---- write outputs
     args.output_dir.mkdir(parents=True, exist_ok=True)
     stem = args.output_dir / f"provenance-{_safe_name(image.name)}"
-    formats = args.formats
+    formats = set(args.formats or FORMATS)
     written = []
     if "html" in formats:
         p = stem.with_name(stem.name + ".html")
