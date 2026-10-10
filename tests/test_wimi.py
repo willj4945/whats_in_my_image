@@ -29,7 +29,7 @@ ELF = b"\x7fELF" + b"\0" * 124
 WH = None  # marker for a whiteout
 
 
-def make_layer(files: dict) -> bytes:
+def make_layer(files: dict, mode: int = 0o755, uid: int = 0) -> bytes:
     raw = io.BytesIO()
     with tarfile.open(fileobj=raw, mode="w") as tf:
         for path, content in files.items():
@@ -39,11 +39,15 @@ def make_layer(files: dict) -> bytes:
                 tf.addfile(ti, io.BytesIO(b""))
             elif isinstance(content, tuple) and content[0] == "symlink":
                 ti = tarfile.TarInfo(path)
-                ti.type, ti.linkname = tarfile.SYMTYPE, content[1]
+                ti.type, ti.linkname, ti.uid = tarfile.SYMTYPE, content[1], uid
+                tf.addfile(ti)
+            elif isinstance(content, tuple) and content[0] == "hardlink":
+                ti = tarfile.TarInfo(path)
+                ti.type, ti.linkname, ti.uid = tarfile.LNKTYPE, content[1], uid
                 tf.addfile(ti)
             else:
                 ti = tarfile.TarInfo(path)
-                ti.size, ti.mode = len(content), 0o755
+                ti.size, ti.mode, ti.uid = len(content), mode, uid
                 tf.addfile(ti, io.BytesIO(content))
     return gzip.compress(raw.getvalue())
 
@@ -409,6 +413,76 @@ class CatalogLogic(unittest.TestCase):
         _, per_layer, notes = compute_origins(["a", "b", "c", "d"], bases, history, {}, "App")
         self.assertEqual(per_layer, ["base0", "app", "app", "app"])
         self.assertTrue(any(n.startswith("Possible unidentified base image: Layer 2 was") for n in notes))
+
+
+class MetadataOnlyLayers(unittest.TestCase):
+    """A layer that rewrites files without changing their contents (chown -R, chmod -R, fix-permissions) must not
+    take over attribution of what the earlier layers put there (#10)."""
+
+    BASE_FILES = {
+        "var/lib/dpkg/status": b"Package: openssl\nStatus: install ok installed\nArchitecture: amd64\n"
+        b"Version: 3.0.11-1\nMaintainer: Debian OpenSSL Team <pkg-openssl-devel@lists.debian.org>\n",
+        "var/lib/dpkg/info/openssl.list": b"/usr/bin/openssl\n",
+        "usr/bin/openssl": ELF,
+        "usr/local/bin/tool": ELF + b"tool",
+        "usr/local/bin/tool-alias": ("hardlink", "usr/local/bin/tool"),
+        "usr/local/bin/tool-link": ("symlink", "tool"),
+        f"{SITE}/requests-2.31.0.dist-info/METADATA": PY_META,
+        "opt/app/node_modules/left-pad/package.json": b'{"name":"left-pad","version":"1.3.0","license":"WTFPL"}',
+    }
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.tmp = Path(self._tmp.name)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def scan(self, second_layer: bytes) -> dict:
+        base_layer = make_layer(self.BASE_FILES)
+        base = write_oci(self.tmp / "base", [base_layer], ["ADD rootfs.tar /"])
+        target = write_oci(self.tmp / "app", [base_layer, second_layer], ["ADD rootfs.tar /", "RUN chown -R 1000 /"])
+        out = self.tmp / "out"
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            rc = cli.main(
+                [f"oci:{target}", "--base", f"Base=oci:{base}", "--no-catalog", "-o", str(out), "-q"]
+                + ["--formats", "json", "--cache-dir", str(self.tmp / "cache")]
+            )
+        self.assertEqual(rc, 0)
+        return json.loads(next(out.glob("*.json")).read_text())
+
+    @staticmethod
+    def by_name(m: dict) -> dict:
+        return {c["name"]: c for c in m["components"]}
+
+    def test_ownership_and_permission_changes_keep_earlier_attribution(self):
+        m = self.scan(make_layer(self.BASE_FILES, mode=0o775, uid=1000))
+        comps = self.by_name(m)
+        for name in ("openssl", "tool", "requests", "left-pad"):
+            self.assertEqual(comps[name]["origin"], "base0", name)
+            self.assertEqual(comps[name]["layer"], 0, name)
+        self.assertEqual([c["name"] for c in m["components"] if c["layer"] == 1], [])
+        # The vendor's program was not replaced, only re-owned.
+        self.assertFalse(any("replaced after installation" in f["message"] for f in comps["openssl"]["flags"]))
+        # The layer still shows what it did.
+        chown_layer = m["layers"][1]
+        self.assertEqual(chown_layer["files_added"], 0)
+        self.assertEqual(chown_layer["files_replaced"], 0)
+        self.assertEqual(chown_layer["files_metadata_only"], len(self.BASE_FILES))
+        self.assertIn("permissions", chown_layer["content_summary"])
+
+    def test_changed_contents_are_still_credited_to_the_later_layer(self):
+        changed = dict(self.BASE_FILES)
+        changed["usr/local/bin/tool"] = ELF + b"patched"
+        changed["usr/local/bin/tool-link"] = ("symlink", "other-tool")
+        m = self.scan(make_layer(changed, uid=1000))
+        comps = self.by_name(m)
+        self.assertEqual(comps["tool"]["origin"], "app")  # new bytes, so the later layer put them there
+        self.assertEqual(comps["requests"]["origin"], "base0")  # unchanged
+        self.assertEqual(comps["openssl"]["origin"], "base0")
+        layer = m["layers"][1]
+        self.assertEqual(layer["files_replaced"], 3)  # tool, its hard link and the retargeted symlink
+        self.assertEqual(layer["files_metadata_only"], len(self.BASE_FILES) - 3)
 
 
 class VendorFixStatus(unittest.TestCase):

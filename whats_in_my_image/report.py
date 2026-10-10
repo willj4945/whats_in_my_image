@@ -62,6 +62,7 @@ def build(image, walker, analyzer, origins, per_layer, notes, vulns, vuln_tool, 
                 **d,
                 "files_added": ls.added,
                 "files_replaced": ls.replaced,
+                "files_metadata_only": ls.metadata_only,
                 "files_deleted": ls.deleted,
                 "components": comp_per_layer.get(layer.index, 0),
                 "vulns": vuln_per_layer.get(layer.index, 0),
@@ -176,8 +177,13 @@ def _content_summary(comps: list[dict], ls) -> str:
         items = [f"{n:,} {noun[0] if n == 1 else noun[1]}" for noun, n in counter.most_common()]
         if items:
             parts.append(f"{verb} " + (", ".join(items[:-1]) + " and " + items[-1] if len(items) > 1 else items[0]))
-    if not parts:
+    if not parts and (ls.added or ls.replaced or ls.deleted or not ls.metadata_only):
         parts.append(f"no software components; {ls.added + ls.replaced:,} file(s) written, {ls.deleted:,} removed")
+    if ls.metadata_only:
+        parts.append(
+            f"changed only the permissions, ownership or timestamps of {ls.metadata_only:,} existing file(s) "
+            "(their contents are still credited to the layers that wrote them)"
+        )
     text = "; ".join(parts)
     return text[0].upper() + text[1:]
 

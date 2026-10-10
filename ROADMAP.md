@@ -45,7 +45,7 @@ Fix the attribution bugs, and make `pipx install whats-in-my-image` work.
 
 **Correctness**
 
-- [ ] [#10](https://github.com/willj4945/whats_in_my_image/issues/10) Layers that only change permissions or ownership take over attribution of unchanged files (`priority: high`)
+- [x] [#10](https://github.com/willj4945/whats_in_my_image/issues/10) Layers that only change permissions or ownership take over attribution of unchanged files (`priority: high`)
 - [ ] [#11](https://github.com/willj4945/whats_in_my_image/issues/11) Vulnerability attribution: ties, ignored package type, loose version match
 - [ ] [#15](https://github.com/willj4945/whats_in_my_image/issues/15) Distroless images: `status.d` file lists aren't read, so every file is reported as unowned
 - [ ] [#16](https://github.com/willj4945/whats_in_my_image/issues/16) A partial catalog match is shown under the wrong base image's name
