@@ -1,9 +1,18 @@
+# One-time setup on Linux, e.g. in ~/.bashrc:
+#   export WIMI_UID=$(id -u) WIMI_GID=$(id -g) DOCKER_GID=$(stat -c %g /var/run/docker.sock)
+#
+# DOCKER_GID is required: it is the group that owns the container engine socket (on Ubuntu that is the
+# "docker" group, not group 0). Without it the scanner sidecars cannot reach the socket and --scan finds nothing.
+# WIMI_UID / WIMI_GID default to 1000, which is right on most single-user machines; set them so files
+# wimi writes to the current directory are owned by you.
+#
 # How to run:
 # docker compose -f contrib/compose.yml run --rm wimi <image to scan> --base <base image> --scan
 services:
   wimi:
     image: ghcr.io/willj4945/whats_in_my_image:${WIMI_VERSION:-latest}
-    # Tested on Linux (Ubuntu 24.04). On Docker Desktop for Mac/Windows, you might need user: "0:0".
+    # Tested on Linux (Ubuntu 24.04). On Docker Desktop for Mac/Windows, you might need user: "0:0"
+    # and DOCKER_GID=0.
     user: ${WIMI_UID:-1000}:${WIMI_GID:-1000}
     group_add: ["${DOCKER_GID:-0}"]
     volumes:

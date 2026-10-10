@@ -31,6 +31,10 @@ All notable changes to this project are documented here. The format follows
   current directory, shares your `docker login` credentials, catalog and caches (including scanner databases), shares
   the container engine socket for scanner sidecars when you can use it, and passes through `WIMI_*`, `TRIVY_*` and
   `GRYPE_*` settings.
+- `contrib/compose.yml`: runs the published `wimi` image with Docker Compose. It runs as `WIMI_UID` / `WIMI_GID`
+  (default 1000) in the current directory, joins the socket's group so scanner sidecars work, caches scanner databases
+  in the `wimi-cache` volume, and passes through `WIMI_*`, `TRIVY_*` and `GRYPE_*` settings. `DOCKER_GID` (the group
+  that owns the container engine socket) must be set; Compose stops with a hint instead of scanning with no access.
 - Documentation for scanner containers, the `wimi-docker` wrapper, and building the image yourself.
 
 ### Changed
