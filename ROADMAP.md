@@ -43,8 +43,8 @@ Small, mostly administrative items that make the project approachable. No releas
 - [ ] Give a second maintainer the `triage` or `write` role, so reviews count toward the required approval instead of
       admins bypassing it. This also fixes the Scorecard Code-Review check.
 - [ ] Label approachable issues `good first issue` ([#17](https://github.com/willj4945/whats_in_my_image/issues/17) and [#18](https://github.com/willj4945/whats_in_my_image/issues/18) are good candidates).
-- [ ] Expand `SECURITY.md`: scope, what counts as a vulnerability in a tool that reads untrusted images, and the
-      disclosure timeline. (Scorecard Security-Policy currently scores 4/10.)
+- [x] Expand `SECURITY.md`: scope, what counts as a vulnerability in a tool that reads untrusted images, and the
+      disclosure timeline.
 
 ## v0.4.0: correct and installable
 
@@ -70,7 +70,7 @@ Fix the attribution bugs, and make `pipx install whats-in-my-image` work.
 
 - [ ] Attach the signed provenance bundle to each GitHub release, so the Scorecard Signed-Releases check can find it.
       (Releases are already attested, but the bundle isn't a release file.)
-- [ ] Pin the remaining tool installs in workflows by hash, not just by version (Scorecard Pinned-Dependencies 6/10).
+- [x] Pin the remaining tool installs in workflows by hash, not just by version.
 
 ## v0.5.0: pipeline-ready
 

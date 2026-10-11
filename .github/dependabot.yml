@@ -26,3 +26,13 @@ updates:
         patterns: ["*"]
     commit-message:
       prefix: docs
+  # Tools the CI, security and release workflows install (hash-locked in .github/requirements/*.txt)
+  - package-ecosystem: pip
+    directory: /.github/requirements
+    schedule:
+      interval: weekly
+    groups:
+      ci-tools:
+        patterns: ["*"]
+    commit-message:
+      prefix: ci

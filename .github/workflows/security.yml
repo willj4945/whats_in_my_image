@@ -62,7 +62,7 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.13"
-      - run: python -m pip install "bandit[sarif]==1.9.4"
+      - run: python -m pip install --require-hashes -r .github/requirements/bandit.txt
       - name: Scan
         run: bandit -c pyproject.toml -r whats_in_my_image -f sarif -o bandit.sarif
       - name: Show findings in the log
@@ -142,7 +142,7 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.13"
-      - run: python -m pip install zizmor==1.30.1
+      - run: python -m pip install --require-hashes -r .github/requirements/zizmor.txt
       - name: zizmor (template injection, unpinned actions, excessive permissions ...)
         run: zizmor --format sarif .github/workflows > zizmor.sarif
       - uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
