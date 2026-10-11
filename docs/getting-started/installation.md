@@ -9,7 +9,7 @@ locked-down hosts.
     [verify it](verify.md), then install it:
 
     ```bash
-    pip install whats_in_my_image-0.2.0-py3-none-any.whl
+    pip install whats_in_my_image-0.3.0-py3-none-any.whl
     wimi --version
     ```
 
@@ -44,7 +44,7 @@ locked-down hosts.
     See [The `wimi-docker` wrapper](#the-wimi-docker-wrapper) for what it sets up.
 
     !!! tip
-        Pin a version tag (for example `:0.2.0`) or a digest rather than `:latest` in pipelines, so every run uses
+        Pin a version tag (for example `:0.3.0`) or a digest rather than `:latest` in pipelines, so every run uses
         the release you verified.
 
 === "From source"

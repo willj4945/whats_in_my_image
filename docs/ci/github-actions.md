@@ -32,7 +32,7 @@ jobs:
           mkdir -p reports
           docker run --rm -u "$(id -u):0" -v "$PWD:/work" -w /work \
             -e WIMI_USERNAME -e WIMI_PASSWORD \
-            ghcr.io/willj4945/whats_in_my_image:0.2.0 \
+            ghcr.io/willj4945/whats_in_my_image:0.3.0 \
             "$IMAGE" --catalog ci/base-catalog.json -o reports
 
       - uses: actions/upload-artifact@v7 # pin to a full commit SHA in production

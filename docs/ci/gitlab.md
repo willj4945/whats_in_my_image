@@ -6,7 +6,7 @@ The `wimi` image's entrypoint is `wimi`, so clear it to let GitLab run the job s
 provenance:
   stage: test
   image:
-    name: ghcr.io/willj4945/whats_in_my_image:0.2.0
+    name: ghcr.io/willj4945/whats_in_my_image:0.3.0
     entrypoint: [""]
   variables:
     WIMI_USERNAME: $CI_REGISTRY_USER

@@ -11,8 +11,8 @@ Every release is built by GitHub Actions and ships with:
 The exact commands, filled in for that release, are in each release's notes. In general:
 
 ```bash
-gh attestation verify whats_in_my_image-0.2.0-py3-none-any.whl --repo willj4945/whats_in_my_image
-gh attestation verify oci://ghcr.io/willj4945/whats_in_my_image:0.2.0 --repo willj4945/whats_in_my_image
+gh attestation verify whats_in_my_image-0.3.0-py3-none-any.whl --repo willj4945/whats_in_my_image
+gh attestation verify oci://ghcr.io/willj4945/whats_in_my_image:0.3.0 --repo willj4945/whats_in_my_image
 sha256sum --check SHA256SUMS
 ```
 

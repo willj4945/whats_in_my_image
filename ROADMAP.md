@@ -17,7 +17,14 @@ Last reviewed: 2026-10-10.
   should be checkable.
 - **No dependencies at runtime.** The tool stays standard-library only, so it installs on air-gapped hosts.
 - **Findings stay visible.** No scanner suppressions (`.trivyignore` and the like) until there is a recorded triage
-  process ([VEX](#v050-interoperable-and-hardened)). Decisions not to fix are recorded, never hidden.
+  process ([VEX](#v060-interoperable-and-hardened)). Decisions not to fix are recorded, never hidden.
+
+## Shipped
+
+- **v0.3.0** (2026-10-10): scanner sidecars, the documentation site, the `wimi-docker` wrapper, the local testbed,
+  attribution fix for layers that only change permissions ([#10](https://github.com/willj4945/whats_in_my_image/issues/10)),
+  and validated `--formats` ([#14](https://github.com/willj4945/whats_in_my_image/pull/14)). See the
+  [changelog](https://github.com/willj4945/whats_in_my_image/blob/main/CHANGELOG.md).
 
 ## Now: project basics
 
@@ -39,13 +46,13 @@ Small, mostly administrative items that make the project approachable. No releas
 - [ ] Expand `SECURITY.md`: scope, what counts as a vulnerability in a tool that reads untrusted images, and the
       disclosure timeline. (Scorecard Security-Policy currently scores 4/10.)
 
-## v0.3.0: correct and installable
+## v0.4.0: correct and installable
 
 Fix the attribution bugs, and make `pipx install whats-in-my-image` work.
 
 **Correctness**
 
-- [ ] [#10](https://github.com/willj4945/whats_in_my_image/issues/10) Layers that only change permissions or ownership take over attribution of unchanged files (`priority: high`)
+- [x] [#10](https://github.com/willj4945/whats_in_my_image/issues/10) Layers that only change permissions or ownership take over attribution of unchanged files (`priority: high`)
 - [ ] [#11](https://github.com/willj4945/whats_in_my_image/issues/11) Vulnerability attribution: ties, ignored package type, loose version match
 - [ ] [#15](https://github.com/willj4945/whats_in_my_image/issues/15) Distroless images: `status.d` file lists aren't read, so every file is reported as unowned
 - [ ] [#16](https://github.com/willj4945/whats_in_my_image/issues/16) A partial catalog match is shown under the wrong base image's name
@@ -65,20 +72,20 @@ Fix the attribution bugs, and make `pipx install whats-in-my-image` work.
       (Releases are already attested, but the bundle isn't a release file.)
 - [ ] Pin the remaining tool installs in workflows by hash, not just by version (Scorecard Pinned-Dependencies 6/10).
 
-## v0.4.0: pipeline-ready
+## v0.5.0: pipeline-ready
 
 Make `wimi` a gate in CI, not only a report.
 
 - [ ] [#12](https://github.com/willj4945/whats_in_my_image/issues/12) `--fail-on` policy with documented exit codes: 0 pass, 1 policy failed, 2 usage or load error, 3 unexpected
       error. Fail closed when a rule needs data that's missing (for example, no scan ran).
-- [ ] [#14](https://github.com/willj4945/whats_in_my_image/pull/14) Validate `--formats` without breaking the comma-list syntax (in review)
+- [x] [#14](https://github.com/willj4945/whats_in_my_image/pull/14) Validate `--formats` without breaking the comma-list syntax (in review)
 - [ ] SARIF output, so findings appear in GitHub code scanning and GitLab's security dashboard.
 - [ ] A versioned JSON schema for the report, published with the docs, so automation can depend on it.
 - [ ] A GitHub Action (`uses: willj4945/whats_in_my_image@v1`) and a GitLab CI/CD component.
 - [ ] Known-answer regression tests: expected attribution for a set of reference images, run nightly from the
       testbed, so attribution changes are always deliberate.
 
-## v0.5.0: interoperable and hardened
+## v0.6.0: interoperable and hardened
 
 - [ ] CycloneDX SBOM output, with provenance (origin, layer, evidence) as component properties.
 - [ ] Read VEX documents (OpenVEX, CycloneDX VEX) to record "not affected" and "will not fix" decisions. This is the
