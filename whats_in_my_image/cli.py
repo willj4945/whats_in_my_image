@@ -9,9 +9,11 @@ import os
 import re
 import sys
 import textwrap
+import traceback
 from pathlib import Path
 
 from . import __version__, html_report, report
+from . import policy as policymod
 from . import vulns as vulnmod
 from .analyze import Analyzer, base_label, compute_origins
 from .catalog import Catalog, default_path, pick_tags
@@ -58,6 +60,26 @@ EPILOG = textwrap.dedent("""\
       WIMI_VULNDB_MOUNT                      SOURCE:/path[:ro|rw] to share instead of the detected volumes
       WIMI_SCANNER_TIMEOUT / _MEMORY / _USER sidecar limits (default 1800 seconds, no memory limit, image's user);
                                              memory as 512m, 4g, 4GiB ...
+
+    policy (--fail-on RULE[,RULE...]), checked after the report is written:
+      app:SEVERITY / base:SEVERITY / any:SEVERITY
+                         vulnerabilities at SEVERITY (critical, high, medium, low) or above, introduced by the
+                         application build, inherited from a base image, or anywhere; e.g. app:high, base:critical
+      ...+fixable        only count vulnerabilities with a fix available, e.g. app:high+fixable
+      unsigned-rpm       OS packages not signed by any vendor key
+      unknown-key        OS packages signed by a key that is not a known vendor key
+      commandline-rpm    OS packages installed from a loose RPM file
+      risky-step         build steps that run a downloaded script or turn off TLS or signature checks
+      outdated-base      the catalog knows newer releases of the base image
+      unattributed       layers or vulnerabilities that could not be attributed
+      A rule whose data is missing fails: a vulnerability rule with no scan data, app: or base: when the base image
+      could not be identified, outdated-base when the base is not in the catalog.
+
+    exit codes:
+      0  report written, and every --fail-on rule passed
+      1  report written, and a --fail-on rule failed
+      2  bad option, or the image could not be loaded
+      3  unexpected error (add --debug for the traceback)                                             
 """)
 
 
@@ -140,9 +162,30 @@ def _parser() -> argparse.ArgumentParser:
         help="line shown above the report heading, e.g. 'Prepared for CISO review'",
     )
     g.add_argument("-q", "--quiet", action="store_true", help="only print the final summary")
+    g = p.add_argument_group("policy (optional)")
+    g.add_argument(
+        "--fail-on",
+        type=_fail_on,
+        action="extend",
+        default=[],
+        metavar="RULE[,RULE...]",
+        help="exit 1 if any rule matches, comma separated or repeated, e.g. app:high+fixable,risky-step "
+        "(see 'policy' below)",
+    )
     _add_registry_args(p)
+    p.add_argument("--debug", action="store_true", help="print the traceback of an unexpected error")
     p.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     return p
+
+
+def _fail_on(value: str) -> list[str]:
+    rules = [r for r in value.split(",") if r.strip()]
+    if not rules:
+        raise argparse.ArgumentTypeError(f"expected one or more rules (got {value!r})")
+    try:
+        return [policymod.parse_rule(r) for r in rules]
+    except ValueError as e:
+        raise argparse.ArgumentTypeError(str(e)) from None
 
 
 def _add_registry_args(p: argparse.ArgumentParser) -> None:
@@ -184,12 +227,27 @@ def _safe_name(name: str) -> str:
     return re.sub(r"[^A-Za-z0-9._-]+", "_", tail).strip("_")[:80] or "image"
 
 
+# Exit codes
+EXIT_OK, EXIT_POLICY, EXIT_USAGE, EXIT_UNEXPECTED = 0, 1, 2, 3
+
+
 def main(argv: list[str] | None = None) -> int:
+    """Run wimi. Exit codes: 0 pass, 1 policy failed, 2 usage or load error, 3 unexpected error."""
     argv = list(sys.argv[1:] if argv is None else argv)
-    if argv and argv[0] == "catalog":
-        return catalog_main(argv[1:])
-    if argv and argv[0] == "scan":
-        argv = argv[1:]
+    try:
+        if argv and argv[0] == "catalog":
+            return catalog_main(argv[1:])
+        return scan_main(argv[1:] if argv and argv[0] == "scan" else argv)
+    except Exception as e:  # anything not handled below must not look like a policy failure (exit 1)
+        if "--debug" in argv:
+            traceback.print_exc()
+        print(f"error: unexpected {type(e).__name__}: {e}", file=sys.stderr)
+        if "--debug" not in argv:
+            print("Run again with --debug for details, and please report it if it looks like a bug.", file=sys.stderr)
+        return EXIT_UNEXPECTED
+
+
+def scan_main(argv: list[str]) -> int:
     args = _parser().parse_args(argv)
     log = (lambda *a, **k: None) if args.quiet else (lambda msg: print(msg, file=sys.stderr, flush=True))
 
@@ -200,7 +258,7 @@ def main(argv: list[str] | None = None) -> int:
         image = load_image(args.image, **common, **target_opts)
     except SourceError as e:
         print(f"error: {e}", file=sys.stderr)
-        return 2
+        return EXIT_USAGE
     target_registry = image.registry_client.ref.registry if image.registry_client else None
 
     # ---- base images: only their configs (layer digests) are needed, not their content
@@ -225,6 +283,7 @@ def main(argv: list[str] | None = None) -> int:
     # The catalog finds every known base in the image's ancestry, including ones the user did not
     # name, so an incomplete --base chain cannot silently credit a base's layers to the application.
     stale_notes: list[str] = []
+    catalog_matches = 0
     if not args.no_catalog:
         try:
             cat = Catalog.load(args.catalog)
@@ -233,6 +292,7 @@ def main(argv: list[str] | None = None) -> int:
             cat = None
         if cat and cat.entries:
             chain, near = cat.match(image.diff_ids)
+            catalog_matches = len(chain)
             for e in chain + near:
                 bases.append(
                     {
@@ -302,6 +362,13 @@ def main(argv: list[str] | None = None) -> int:
         image, walker, analyzer, origins, per_layer, notes, found_vulns, tool, args.app_name, vuln_scan=scan_info
     )
     model["subtitle"] = args.subtitle
+    model["policy"] = None
+    if args.fail_on:
+        model["policy"] = policymod.evaluate(
+            model, args.fail_on, scan_requested=bool(args.scan), catalog_matches=catalog_matches
+        )
+        tone = "good" if model["policy"]["passed"] else "bad"
+        model["takeaways"].insert(0, {"tone": tone, "text": policymod.summary(model["policy"]), "policy": True})
 
     # ---- write outputs
     args.output_dir.mkdir(parents=True, exist_ok=True)
@@ -322,7 +389,9 @@ def main(argv: list[str] | None = None) -> int:
             written.append(_write_vuln_csv(stem.with_name(stem.name + "-vulnerabilities.csv"), model))
 
     _print_summary(model, written)
-    return 0
+    if model["policy"] and not model["policy"]["passed"]:
+        return EXIT_POLICY
+    return EXIT_OK
 
 
 def catalog_main(argv: list[str]) -> int:
@@ -330,6 +399,7 @@ def catalog_main(argv: list[str]) -> int:
     common.add_argument(
         "--catalog", type=Path, default=None, help=f"catalog file (default: {default_path()}, or set WIMI_CATALOG)"
     )
+    common.add_argument("--debug", action="store_true", help="print the traceback of an unexpected error")
     p = argparse.ArgumentParser(
         prog="wimi catalog",
         description="Manage the catalog of known base images. Once a base is catalogued, `wimi` recognises it in "
@@ -357,7 +427,7 @@ def catalog_main(argv: list[str]) -> int:
         cat = Catalog.load(args.catalog)
     except ValueError as e:
         print(f"error: {e}", file=sys.stderr)
-        return 2
+        return EXIT_USAGE
 
     if args.cmd == "list":
         if not cat.entries:
@@ -385,7 +455,7 @@ def catalog_main(argv: list[str]) -> int:
             tags = RegistryClient(ref, **opts).list_tags()
         except RegistryError as e:
             print(f"error: {e}", file=sys.stderr)
-            return 2
+            return EXIT_USAGE
         chosen = pick_tags(tags, args.match, args.limit)
         print(f"{ref.registry}/{ref.repository}: {len(tags)} tags, adding {len(chosen)}", file=sys.stderr)
         targets = [(args.name, f"{ref.registry}/{ref.repository}:{t}") for t in chosen]
@@ -407,7 +477,7 @@ def catalog_main(argv: list[str]) -> int:
             cat.save()
     cat.save()
     print(f"Catalog now holds {len(cat.entries)} images: {cat.path}")
-    return 1 if failed and failed == len(targets) else 0
+    return EXIT_USAGE if failed and failed == len(targets) else EXIT_OK
 
 
 def _dedupe(vs):
@@ -516,9 +586,33 @@ def _print_summary(m: dict, written: list[Path]) -> None:
         print(f" {o['label'][:44]:<44} {layers:<13} {o['components']:>6} comps{vul}", file=out)
     print("-" * width, file=out)
     for t in m["takeaways"]:
+        if t.get("policy"):
+            continue  # printed as a table below
         mark = {"good": "+", "bad": "!", "warn": "!", "neutral": "*"}[t["tone"]]
         print(textwrap.fill(t["text"], width, initial_indent=f" {mark} ", subsequent_indent="   "), file=out)
     print("-" * width, file=out)
+    pol = m.get("policy")
+    if pol:
+        n_failed = len(pol["failed"])
+        verdict = "passed" if pol["passed"] else f"FAILED ({n_failed} of {len(pol['rules'])} rules)"
+        print(f" Policy (--fail-on): {verdict}", file=out)
+        wide = max(len(r["rule"]) for r in pol["rules"])
+        for r in pol["rules"]:
+            mark = "pass" if r["passed"] else "FAIL"
+            detail = policymod.reason(r)
+            if r["items"] and not r["passed"]:
+                more = r["count"] - len(r["items"][:3])
+                detail += ": " + ", ".join(r["items"][:3]) + (f" and {more:,} more" if more > 0 else "")
+            print(
+                textwrap.fill(
+                    detail,
+                    width,
+                    initial_indent=f"   {mark}  {r['rule']:<{wide}}  ",
+                    subsequent_indent=" " * (wide + 11),
+                ),
+                file=out,
+            )
+        print("-" * width, file=out)
     for p in written:
         print(f" wrote {p}", file=out)
     print(file=out)
