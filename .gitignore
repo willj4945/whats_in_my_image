@@ -6,3 +6,5 @@ build/
 dist/
 site/
 .venv-docs/
+.idea
+.vscode

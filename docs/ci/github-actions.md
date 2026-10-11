@@ -33,7 +33,8 @@ jobs:
           docker run --rm -u "$(id -u):0" -v "$PWD:/work" -w /work \
             -e WIMI_USERNAME -e WIMI_PASSWORD \
             ghcr.io/willj4945/whats_in_my_image:0.2.0 \
-            "$IMAGE" --catalog ci/base-catalog.json -o reports
+            "$IMAGE" --catalog ci/base-catalog.json -o reports \
+            --fail-on risky-step,unattributed
 
       - uses: actions/upload-artifact@v7 # pin to a full commit SHA in production
         if: always()
@@ -46,8 +47,11 @@ jobs:
   read-only token as a repository secret and use that.
 * The image runs as your runner's user ID (`-u "$(id -u):0"`), so the reports it writes into the workspace are
   owned by the runner.
+* `--fail-on` fails the step (exit 1) when a build step runs a downloaded script or turns off TLS or signature
+  checks, or when something could not be attributed. `if: always()` still uploads the report of a failed run.
+  See [Failing the pipeline](index.md#failing-the-pipeline) for the other rules.
 * To attribute vulnerabilities, scan the image with Trivy or Grype earlier in the job, write JSON into the workspace,
-  and add `--vuln-report trivy.json`.
+  and add `--vuln-report trivy.json`. Then you can gate on them too, for example `--fail-on app:high+fixable`.
 
 !!! tip "Pinning"
     Pin both the actions and the `wimi` image to full digests in production, and let Dependabot keep the action pins
