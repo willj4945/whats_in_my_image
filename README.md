@@ -63,7 +63,7 @@ executive (CISO/CIO) can read in two minutes and an engineer can act on.
 
 ```bash
 # Install the wheel from the Releases page (or use the container image below)
-pip install whats_in_my_image-0.2.0-py3-none-any.whl
+pip install whats_in_my_image-0.3.0-py3-none-any.whl
 
 # Scan any image in any registry
 wimi registry.example.mil/team/api:2.4

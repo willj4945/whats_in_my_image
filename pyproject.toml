@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "whats-in-my-image"
-version = "0.2.0"
+version = "0.3.0"
 description = "Trace every package, library and program in a container image to the base image or build step that put it there."
 readme = "README.md"
 license = "Apache-2.0"
