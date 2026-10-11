@@ -375,6 +375,61 @@ class EndToEnd(unittest.TestCase):
         m = json.loads(next(out.glob("*.json")).read_text())
         self.assertTrue(any("NOT built on" in n for n in m["notes"]))
 
+    def test_formats_flag_before_image_writes_only_that_format(self):
+        out = self.tmp / "out-json"
+        with contextlib.redirect_stdout(io.StringIO()):
+            rc = cli.main(
+                [
+                    "--formats",
+                    "json",
+                    f"oci:{self.target}",
+                    "-o",
+                    str(out),
+                    "-q",
+                    "--cache-dir",
+                    str(self.tmp / "cache"),
+                ]
+            )
+        self.assertEqual(rc, 0)
+        self.assertEqual([p.suffix for p in out.iterdir()], [".json"])
+
+
+class FormatsFlag(unittest.TestCase):
+    def parse(self, *argv: str):
+        with contextlib.redirect_stderr(io.StringIO()):
+            return cli._parser().parse_args(list(argv))
+
+    def formats(self, *argv: str) -> list[str]:
+        args = self.parse(*argv)
+        self.assertEqual(args.image, "IMG")
+        return sorted(set(args.formats or cli.FORMATS))
+
+    def test_default_is_all_formats(self):
+        self.assertEqual(self.formats("IMG"), ["csv", "html", "json"])
+
+    def test_comma_list(self):
+        self.assertEqual(self.formats("IMG", "--formats", "html,json"), ["html", "json"])
+
+    def test_repeated_flag(self):
+        self.assertEqual(self.formats("IMG", "--formats", "html", "--formats", "json"), ["html", "json"])
+
+    def test_flag_before_image_does_not_swallow_it(self):
+        self.assertEqual(self.formats("--formats", "json", "IMG"), ["json"])
+
+    def test_case_and_spaces_ignored(self):
+        self.assertEqual(self.formats("IMG", "--formats", " HTML , Json "), ["html", "json"])
+
+    def test_invalid_values_are_rejected(self):
+        for bad in ("pdf", "html,pdf", ",", ""):
+            with self.subTest(bad=bad), self.assertRaises(SystemExit) as cm:
+                self.parse("IMG", "--formats", bad)
+            self.assertEqual(cm.exception.code, 2)
+
+    def test_missing_value_is_rejected(self):
+        with self.assertRaises(SystemExit) as cm:
+            self.parse("IMG", "--formats")
+        self.assertEqual(cm.exception.code, 2)
+
 
 class CatalogLogic(unittest.TestCase):
     def test_match_returns_chain_and_nearest_other_tag(self):
