@@ -15,6 +15,7 @@
 | `findings`          | The findings that need attention, each with its severity and the origin responsible for it.                                                                                                                                           |
 | `notes`             | Plain-English notes about the attribution, such as partial base matches or an outdated base.                                                                                                                                          |
 | `policy`            | The `--fail-on` result, or `null` without `--fail-on`: `passed`, the `failed` rule names, and for each rule its `count`, a few example `items`, and `missing` (why the rule could not be checked, for example no vulnerability data). |
+| `policy`            | The `--fail-on` result, or `null` without `--fail-on`: `passed`, the `failed` rule names, and for each rule its `count`, a few example `items`, and `missing` (why the rule could not be checked, for example no vulnerability data). |
 | `removed_packages`  | Packages that an earlier layer installed and a later layer removed.                                                                                                                                                                   |
 | `tool`, `generated` | The `wimi` version that wrote the report, and when.                                                                                                                                                                                   |
 
