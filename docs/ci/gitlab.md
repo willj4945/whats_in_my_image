@@ -15,6 +15,7 @@ provenance:
     - wimi "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
         --catalog ci/base-catalog.json
         --vuln-report trivy.json
+        --fail-on app:high+fixable,risky-step,unattributed
         -o reports
   artifacts:
     when: always
@@ -26,6 +27,9 @@ provenance:
   CI/CD variables instead.
 * `trivy.json` comes from an earlier job that scanned the same image (pass it with `needs:` or `dependencies:`).
   Drop `--vuln-report` if you don't scan.
+* `--fail-on` fails the job (exit 1) when the application build introduced a high or critical vulnerability that
+  has a fix, ran a risky build step, or left something unattributed. `when: always` keeps the report of a failed
+  job. See [Failing the pipeline](index.md#failing-the-pipeline) for the other rules.
 * Commit the team's base catalog (`ci/base-catalog.json` here) so every pipeline identifies bases the same way.
 
 !!! tip "Internal certificate authorities"

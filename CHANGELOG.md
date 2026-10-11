@@ -32,6 +32,15 @@ All notable changes to this project are documented here. The format follows
   the container engine socket for scanner sidecars when you can use it, and passes through `WIMI_*`, `TRIVY_*` and
   `GRYPE_*` settings.
 - Documentation for scanner containers, the `wimi-docker` wrapper, and building the image yourself.
+- `--fail-on RULE[,RULE...]` turns the report into a CI gate: `wimi` exits 1 when a rule matches. Rules are
+  `app:`, `base:` or `any:` with a severity (`app:high` counts high and critical vulnerabilities the application build
+  introduced), optionally `+fixable`, and `unsigned-rpm`, `unknown-key`, `commandline-rpm`, `risky-step`,
+  `outdated-base` and `unattributed`. A rule whose data is missing fails rather than passing: a vulnerability rule with
+  no scan data, `app:` / `base:` when the base image could not be identified, `outdated-base` when the base is not in
+  the catalog. The result of each rule, with counts, is in the terminal summary, the JSON report (`policy`) and the
+  HTML report's bottom line. Without `--fail-on` nothing changes except that the JSON has `"policy": null`.
+  ([#12](https://github.com/willj4945/whats_in_my_image/issues/12))
+- Documented exit codes: 0 pass, 1 policy failed, 2 bad option or the image could not be loaded, 3 unexpected error.
 
 ### Changed
 
@@ -47,6 +56,9 @@ All notable changes to this project are documented here. The format follows
 - `--formats` values are validated, so a typo such as `--formats htlm` is an error instead of writing nothing. A comma
   list (`--formats html,json`) or a repeated flag (`--formats html --formats json`) is accepted, case is ignored, and
   the flag can come before the image name.
+- An unexpected error now prints a one-line message and exits 3 instead of printing a Python traceback and exiting 1,
+  so it can't be mistaken for a failed `--fail-on` policy. `--debug` prints the traceback.
+- `wimi catalog add` / `crawl` exits 2, not 1, when no image could be added.
 
 ### Fixed
 
