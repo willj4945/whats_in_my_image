@@ -35,7 +35,10 @@ so it can tell:
 * a package the base installed and the application left alone (credited to the **base**),
 * a base package the application **upgraded** (credited to the **application build**, because that layer put the
   current version there),
-* a package one layer installed and a later layer **removed** (listed separately, since it is no longer present).
+* a package one layer installed and a later layer **removed** (listed separately, since it is no longer present),
+* files a later layer only **re-owned or re-permissioned** (`chown -R`, `chmod -R`, `fix-permissions`): every file's
+  contents are hashed, so a rewrite of the same bytes leaves the credit with the layer that first put them there. The
+  layer view still shows how many files such a step touched.
 
 This is what makes the split between "the base image's problem" and "the application team's problem" defensible.
 

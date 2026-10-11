@@ -71,7 +71,7 @@ class FileRec:
     mode: int
     link: str = ""
     elf: bool = False
-    sha256: str = ""
+    sha256: str = ""  # of the contents, for regular files (and hard links, from their target)
     go: dict | None = None
     prev_layer: int | None = None  # layer whose version of this path was overwritten
 
@@ -81,6 +81,7 @@ class LayerScan:
     index: int
     added: int = 0
     replaced: int = 0
+    metadata_only: int = 0  # rewritten with the same contents: chown/chmod -R, fix-permissions, touch
     deleted: int = 0
     bytes_written: int = 0
     captured: dict[str, bytes] = field(default_factory=dict)
@@ -173,34 +174,43 @@ class Walker:
                             ls.captured[path] = ls.captured[rec.link]
                 if kind != "d":
                     if prev is not None and prev.kind != "d":
-                        ls.replaced += 1
+                        if _same_content(prev, rec):
+                            # Only permissions, ownership or timestamps changed. The contents are still the ones the
+                            # earlier layer put there, so that layer keeps the credit (#10).
+                            rec.layer, rec.prev_layer = prev.layer, prev.prev_layer
+                            ls.metadata_only += 1
+                        else:
+                            ls.replaced += 1
                     else:
                         ls.added += 1
                 self._put(rec)
 
     def _inspect(self, ls: LayerScan, rec: FileRec, f, size: int) -> None:
+        """Hash the contents (so a later rewrite of the same bytes can be recognised), capture package metadata,
+        and look inside programs."""
         if f is None:
             return
         cap = capture_kind(rec.path)
         if cap and size <= MAX_CAPTURE:
             data = f.read()
+            rec.sha256 = hashlib.sha256(data).hexdigest()
             if cap == "java":
                 ls.java[rec.path] = ecosystems.parse_jar(data, rec.path)
             else:
                 ls.captured[rec.path] = data
             return
-        if size < 64:
-            return
         head = f.read(4)
-        if head != ELF_MAGIC:
-            return
-        rec.elf = True
-        if size > MAX_BINARY_SCAN:
-            return
-        rest = f.read()
-        rec.sha256 = _sha_two(head, rest)
-        if gobuild.MAGIC in rest:
-            rec.go = gobuild.parse(rest)
+        h = hashlib.sha256(head)
+        rec.elf = size >= 64 and head == ELF_MAGIC
+        if rec.elf and size <= MAX_BINARY_SCAN:
+            rest = f.read()
+            h.update(rest)
+            if gobuild.MAGIC in rest:
+                rec.go = gobuild.parse(rest)
+        else:
+            while chunk := f.read(1 << 20):
+                h.update(chunk)
+        rec.sha256 = h.hexdigest()
 
     # ---- queries
 
@@ -244,7 +254,11 @@ class Walker:
         return d
 
 
-def _sha_two(a: bytes, b: bytes) -> str:
-    h = hashlib.sha256(a)
-    h.update(b)
-    return h.hexdigest()
+def _same_content(prev: FileRec, rec: FileRec) -> bool:
+    """True if ``rec`` rewrites ``prev`` without changing what is there: same bytes for a file or hard link, same
+    target for a symlink."""
+    if prev.kind in ("f", "h") and rec.kind in ("f", "h"):
+        return bool(prev.sha256) and prev.sha256 == rec.sha256
+    if prev.kind == rec.kind == "l":
+        return prev.link == rec.link
+    return False
