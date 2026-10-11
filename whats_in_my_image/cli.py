@@ -79,7 +79,7 @@ EPILOG = textwrap.dedent("""\
       0  report written, and every --fail-on rule passed
       1  report written, and a --fail-on rule failed
       2  bad option, or the image could not be loaded
-      3  unexpected error (add --debug for the traceback)                                             
+      3  unexpected error (add --debug for the traceback)
 """)
 
 
