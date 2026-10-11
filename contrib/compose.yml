@@ -1,0 +1,44 @@
+# One-time setup on Linux, e.g. in ~/.bashrc:
+#   export WIMI_UID=$(id -u) WIMI_GID=$(id -g) DOCKER_GID=$(stat -c %g /var/run/docker.sock)
+#
+# DOCKER_GID is required: it is the group that owns the container engine socket (on Ubuntu that is the
+# "docker" group, not group 0). Without it the scanner sidecars cannot reach the socket and --scan finds nothing.
+# WIMI_UID / WIMI_GID default to 1000, which is right on most single-user machines; set them so files
+# wimi writes to the current directory are owned by you.
+#
+# How to run:
+# docker compose -f contrib/compose.yml run --rm wimi <image to scan> --base <base image> --scan
+services:
+  wimi:
+    image: ghcr.io/willj4945/whats_in_my_image:${WIMI_VERSION:-latest}
+    # Tested on Linux (Ubuntu 24.04). On Docker Desktop for Mac/Windows, you might need user: "0:0"
+    # and DOCKER_GID=0.
+    user: ${WIMI_UID:-1000}:${WIMI_GID:-1000}
+    group_add: ["${DOCKER_GID:-0}"]
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${PWD:-.}:/work
+      - wimi-cache:/wimi-cache
+    working_dir: /work
+    environment:
+      HOME: /tmp
+      TRIVY_CACHE_DIR: /wimi-cache/trivy
+      GRYPE_DB_CACHE_DIR: /wimi-cache/grype
+      # following variables are optional and can be provided via `.env` file
+      # WIMI_SCANNER_PULL: true
+      WIMI_SCANNER_MODE:
+      WIMI_TRIVY_IMAGE:
+      WIMI_GRYPE_IMAGE:
+      WIMI_SCANNER_ENV:
+      WIMI_SCANNER_TIMEOUT:
+      WIMI_SCANNER_MEMORY:
+      WIMI_VULNDB_MOUNT:
+      WIMI_SCANNER_USER:
+      WIMI_CATALOG:
+      WIMI_USERNAME:
+      WIMI_PASSWORD:
+      TRIVY_SKIP_DB_UPDATE:
+      GRYPE_DB_AUTO_UPDATE:
+
+volumes:
+  wimi-cache:
