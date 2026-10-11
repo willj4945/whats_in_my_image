@@ -1,0 +1,4 @@
+# Packaging front end for the CI and release wheel builds.
+# Regenerate the lock file after editing:
+#   pip-compile --generate-hashes --strip-extras .github/requirements/build.in -o .github/requirements/build.txt
+build==1.6.1

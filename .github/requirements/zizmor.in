@@ -1,0 +1,4 @@
+# GitHub Actions workflow linter for the security workflow.
+# Regenerate the lock file after editing:
+#   pip-compile --generate-hashes --strip-extras .github/requirements/zizmor.in -o .github/requirements/zizmor.txt
+zizmor==1.30.1

@@ -1,0 +1,4 @@
+# Linter and formatter for the CI lint job.
+# Regenerate the lock file after editing:
+#   pip-compile --generate-hashes --strip-extras .github/requirements/ruff.in -o .github/requirements/ruff.txt
+ruff==0.16.10

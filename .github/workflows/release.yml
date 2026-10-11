@@ -46,7 +46,7 @@ jobs:
             exit 1
           fi
       - run: python -m unittest discover -s tests
-      - run: python -m pip install build==1.6.1
+      - run: python -m pip install --require-hashes -r .github/requirements/build.txt
       - run: python -m build
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -124,7 +124,7 @@ jobs:
         run: |
           mkdir -p release
           trivy image --format cyclonedx --output "release/wimi-${VERSION}-image.cdx.json" "${IMAGE}@${IMAGE_DIGEST}"
-          python -m pip install --quiet --no-index --target /tmp/sbom-root/lib/python3/site-packages dist/*.whl
+          python -m pip install --quiet --no-index --no-deps --target /tmp/sbom-root/lib/python3/site-packages dist/*.whl
           trivy rootfs --format cyclonedx --output "release/wimi-${VERSION}-python.cdx.json" /tmp/sbom-root
 
       - name: Build provenance for the Python package
@@ -153,7 +153,7 @@ jobs:
 
       - name: Provenance report of wimi's own image (dogfooding)
         run: |
-          python -m pip install --quiet --no-index dist/*.whl
+          python -m pip install --quiet --no-index --no-deps dist/*.whl
           wimi "docker:${IMAGE}:${VERSION}" \
             --base "Red Hat UBI 9 Python 3.12=${BASE_IMAGE}" \
             --app-name "wimi ${VERSION} release build" \

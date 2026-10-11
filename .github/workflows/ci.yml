@@ -29,7 +29,7 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.13"
-      - run: python -m pip install ruff==0.16.10
+      - run: python -m pip install --require-hashes -r .github/requirements/ruff.txt
       - run: ruff check --output-format=github .
       - run: ruff format --check .
 
@@ -52,7 +52,7 @@ jobs:
         run: python -m unittest discover -s tests -v
       - name: Install and smoke-test the CLI
         run: |
-          python -m pip install .
+          python -m pip install --no-deps .
           wimi --version
           wimi --help > /dev/null
 
@@ -67,7 +67,7 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.13"
-      - run: python -m pip install build==1.6.1
+      - run: python -m pip install --require-hashes -r .github/requirements/build.txt
       - run: python -m build
       - name: Verify the wheel installs and runs
         run: |

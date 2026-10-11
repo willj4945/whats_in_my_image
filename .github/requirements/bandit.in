@@ -1,0 +1,4 @@
+# Python SAST for the security workflow.
+# Regenerate the lock file after editing:
+#   pip-compile --generate-hashes --allow-unsafe --strip-extras .github/requirements/bandit.in -o .github/requirements/bandit.txt
+bandit[sarif]==1.9.4
