@@ -5,6 +5,11 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-10
+
+Runs Trivy and Grype as sidecar containers, fixes attribution for layers that only change permissions, adds a
+documentation site, and makes the container image easy to run with the `wimi-docker` wrapper.
+
 ### Added
 
 - Documentation site at https://willj4945.github.io/whats_in_my_image/, built with Material for MkDocs and published
@@ -47,6 +52,7 @@ All notable changes to this project are documented here. The format follows
 - `--formats` values are validated, so a typo such as `--formats htlm` is an error instead of writing nothing. A comma
   list (`--formats html,json`) or a repeated flag (`--formats html --formats json`) is accepted, case is ignored, and
   the flag can come before the image name.
+- The container image is built on Red Hat UBI 9 Python 3.12 minimal `9.8-1791420498` (2026-10-08), the latest release.
 
 ### Fixed
 
@@ -104,6 +110,7 @@ First public release.
 - Licensed under the Apache License 2.0.
 - Container image on GHCR, signed with cosign, with SLSA build provenance and CycloneDX SBOMs.
 
-[Unreleased]: https://github.com/willj4945/whats_in_my_image/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/willj4945/whats_in_my_image/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/willj4945/whats_in_my_image/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/willj4945/whats_in_my_image/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/willj4945/whats_in_my_image/releases/tag/v0.1.0

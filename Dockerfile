@@ -8,7 +8,7 @@
 #
 # Base: Red Hat UBI 9 + Python 3.12 (minimal), pinned by digest so builds are reproducible.
 # Dependabot does not update this pin; refresh it deliberately when cutting a release.
-ARG BASE_IMAGE=registry.access.redhat.com/ubi9/python-312-minimal@sha256:bdfae86a800f2a1eb520a69e79e59f9f03ba5368dc54be5caf454dd5c0f382f2
+ARG BASE_IMAGE=registry.access.redhat.com/ubi9/python-312-minimal@sha256:f0f762a4babb280458627ab5cdaafbe86506aa60355c6fd4417074a5aa4727b8
 # "source" (default): build the wheel from the checkout. "dist": use the prebuilt wheel from the `dist` build context.
 ARG WHEEL=source
 
