@@ -321,7 +321,7 @@ def render(m: dict) -> str:
       <dt>Command</dt><dd><pre>{e(lyr["command"] or "(none recorded)")}</pre></dd>
       {f"<dt>URLs contacted</dt><dd><ul>{urls}</ul></dd>" if urls else ""}
       <dt>Layer digest</dt><dd class="mono">{e(lyr["diff_id"])}</dd>
-      <dt>Files</dt><dd>{lyr["files_added"]:,} added, {lyr["files_replaced"]:,} replaced, {lyr["files_deleted"]:,} deleted</dd>
+      <dt>Files</dt><dd>{lyr["files_added"]:,} added, {lyr["files_replaced"]:,} replaced, {lyr["files_deleted"]:,} deleted{f", {lyr['files_metadata_only']:,} with only permissions or ownership changed" if lyr["files_metadata_only"] else ""}</dd>
       {f"<dt>Warning</dt><dd>{e(lyr['error'])}</dd>" if lyr["error"] else ""}</dl>
     </details>
   </div>

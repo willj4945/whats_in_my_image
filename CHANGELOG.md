@@ -64,6 +64,11 @@ All notable changes to this project are documented here. The format follows
 
 - Grype scanner sidecars no longer fail when run as a non-root user (`WIMI_SCANNER_USER`): sidecars now write
   temporary files to the scan directory, which any user can write, instead of the image's `/tmp`.
+- A layer that only changes permissions, ownership or timestamps (`chown -R`, `chmod -R`, `fix-permissions`, `COPY
+  --chown` over existing files) no longer takes credit for files it didn't change. Every file's contents are now
+  hashed, and a rewrite of the same bytes keeps the earlier layer, for loose programs and Python, npm, Java and Go
+  components alike. Vendor packages re-owned this way are no longer flagged as "replaced after installation". The layer
+  view reports these files separately (`files_metadata_only` in the JSON). (#10)
 
 ## [0.2.0] - 2026-10-02
 
