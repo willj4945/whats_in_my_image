@@ -48,6 +48,9 @@ All notable changes to this project are documented here. The format follows
   workflow passes its signed wheel in with `--build-arg WHEEL=dist --build-context dist=dist/`, so released images
   contain exactly that wheel.
 - The "Scanner sidecar (container engine)" CI job is a required check on `main`.
+- `--formats` values are validated, so a typo such as `--formats htlm` is an error instead of writing nothing. A comma
+  list (`--formats html,json`) or a repeated flag (`--formats html --formats json`) is accepted, case is ignored, and
+  the flag can come before the image name.
 
 ### Fixed
 
