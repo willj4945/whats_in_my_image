@@ -73,7 +73,8 @@ EPILOG = textwrap.dedent("""\
       outdated-base      the catalog knows newer releases of the base image
       unattributed       layers or vulnerabilities that could not be attributed
       A rule whose data is missing fails: a vulnerability rule with no scan data, app: or base: when the base image
-      could not be identified, outdated-base when the base is not in the catalog.
+      could not be identified or the boundary is only estimated (give --base or catalogue the base), outdated-base
+      when the base is not in the catalog.
 
     exit codes:
       0  report written, and every --fail-on rule passed
