@@ -8,7 +8,7 @@ ticket, opened offline or printed to PDF. It follows the system light or dark th
 
 1. **Bottom line.** Plain-English conclusions, each backed by numbers: who supplied what share of the software,
    where the critical and high vulnerabilities came from, and who can fix them. Written so a CISO or CIO can read
-   it in two minutes.
+   it in two minutes. With `--fail-on`, the first line says whether the policy passed and which rules failed.
 2. **Where the contents came from.** The proof behind each origin (exact or partial layer-digest match, catalog
    identification, or an estimate), with charts of components and vulnerabilities by origin.
 3. **How the image was built.** Every layer, what it actually added, and the recorded build command. A "layer cake"
