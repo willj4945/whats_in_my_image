@@ -62,6 +62,9 @@ Rules are comma separated, or the flag can be repeated. A rule fails when it fin
 * a vulnerability rule with no vulnerability data, for example because `--scan` was skipped when no scanner was
   available. Pass `--vuln-report`, `--scan` or `--harbor-vulns`;
 * an `app:` or `base:` rule when the base image could not be identified, because findings cannot be split by origin;
+* an `app:` or `base:` rule when the base/application boundary is only estimated from build times, because an
+  estimate is not proof. This is what happens with no `--base` and no catalog match, so give the base with `--base`
+  or [catalogue it](../guide/catalog.md) before gating on `app:` or `base:`;
 * `outdated-base` when the base image is not in the catalog, because newer releases are unknown.
 
 The terminal summary lists every rule with its count, the JSON report records the result under
