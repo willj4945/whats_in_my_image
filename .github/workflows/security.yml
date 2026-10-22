@@ -41,11 +41,11 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: github/codeql-action/init@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
+      - uses: github/codeql-action/init@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v4.39.0
         with:
           languages: ${{ matrix.language }}
           queries: security-extended
-      - uses: github/codeql-action/analyze@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
+      - uses: github/codeql-action/analyze@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v4.39.0
         with:
           category: codeql-${{ matrix.language }}
 
@@ -68,7 +68,7 @@ jobs:
       - name: Show findings in the log
         if: failure()
         run: bandit -c pyproject.toml -r whats_in_my_image
-      - uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
+      - uses: github/codeql-action/upload-sarif@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v4.39.0
         if: always() && hashFiles('bandit.sarif') != ''
         with:
           sarif_file: bandit.sarif
@@ -91,7 +91,7 @@ jobs:
           tar -xzf trivy.tgz trivy && sudo mv trivy /usr/local/bin/ && rm trivy.tgz
       - name: Report all findings (SARIF)
         run: trivy fs --scanners vuln,secret,misconfig --format sarif --output trivy.sarif --skip-dirs examples --skip-files docs/sample-report.html .
-      - uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
+      - uses: github/codeql-action/upload-sarif@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v4.39.0
         if: always() && hashFiles('trivy.sarif') != ''
         with:
           sarif_file: trivy.sarif
@@ -117,7 +117,7 @@ jobs:
           tar -xzf gitleaks.tgz gitleaks && sudo mv gitleaks /usr/local/bin/ && rm gitleaks.tgz
       - name: Scan
         run: gitleaks git --redact --report-format sarif --report-path gitleaks.sarif .
-      - uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
+      - uses: github/codeql-action/upload-sarif@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v4.39.0
         if: always() && hashFiles('gitleaks.sarif') != ''
         with:
           sarif_file: gitleaks.sarif
@@ -145,7 +145,7 @@ jobs:
       - run: python -m pip install --require-hashes -r .github/requirements/zizmor.txt
       - name: zizmor (template injection, unpinned actions, excessive permissions ...)
         run: zizmor --format sarif .github/workflows > zizmor.sarif
-      - uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
+      - uses: github/codeql-action/upload-sarif@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v4.39.0
         if: always() && hashFiles('zizmor.sarif') != ''
         with:
           sarif_file: zizmor.sarif
