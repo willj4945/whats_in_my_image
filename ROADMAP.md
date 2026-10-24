@@ -56,7 +56,7 @@ Fix the attribution bugs, add a pipeline gate, and make `pipx install whats-in-m
 
 - [x] [#10](https://github.com/willj4945/whats_in_my_image/issues/10) Layers that only change permissions or ownership take over attribution of unchanged files (`priority: high`)
 - [ ] [#11](https://github.com/willj4945/whats_in_my_image/issues/11) Vulnerability attribution: ties, ignored package type, loose version match
-- [ ] [#15](https://github.com/willj4945/whats_in_my_image/issues/15) Distroless images: `status.d` file lists aren't read, so every file is reported as unowned
+- [x] [#15](https://github.com/willj4945/whats_in_my_image/issues/15) Distroless images: `status.d` file lists aren't read, so every file is reported as unowned
 - [x] [#16](https://github.com/willj4945/whats_in_my_image/issues/16) A partial catalog match is shown under the wrong base image's name
 - [ ] [#17](https://github.com/willj4945/whats_in_my_image/issues/17) The scanner sidecar says the engine is "not responding" when the socket is permission denied
 - [ ] [#18](https://github.com/willj4945/whats_in_my_image/issues/18) An unreadable input file crashes with a traceback instead of a clean error
@@ -120,7 +120,7 @@ Iron Bank stays the first audience; this widens the framing and the catalog in p
 
 **Prerequisites** (bases commercial teams use that don't work well yet)
 
-- [ ] [#15](https://github.com/willj4945/whats_in_my_image/issues/15) Distroless images: read `status.d` file lists.
+- [x] [#15](https://github.com/willj4945/whats_in_my_image/issues/15) Distroless images: read `status.d` file lists.
 - [ ] Wolfi and Chainguard images: their apk packages are labelled "Operating-system package (Alpine)". Label them by
       distribution.
 

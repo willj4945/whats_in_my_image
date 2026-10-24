@@ -49,6 +49,16 @@ def parse_dpkg_list(data: bytes) -> list[str]:
     return [lyr.strip() for lyr in data.decode("utf-8", "replace").splitlines() if lyr.strip() not in ("", "/.")]
 
 
+def parse_dpkg_md5sums(data: bytes) -> list[str]:
+    """Paths from a dpkg md5sums file (``<md5>  <path relative to />``), as distroless ships in status.d/."""
+    paths = []
+    for line in data.decode("utf-8", "replace").splitlines():
+        parts = line.strip().split(None, 1)
+        if len(parts) == 2:
+            paths.append(parts[1])
+    return paths
+
+
 # --------------------------------------------------------------------------- apk
 
 
