@@ -28,6 +28,13 @@ All notable changes to this project are documented here. The format follows
   so it can't be mistaken for a failed `--fail-on` policy. `--debug` prints the traceback.
 - `wimi catalog add` / `crawl` exits 2, not 1, when no image could be added.
 
+### Fixed
+
+- Distroless images: files are credited to the Debian packages that own them. Distroless has no
+  `/var/lib/dpkg/info/*.list`, so file lists are now read from `/var/lib/dpkg/status.d/<package>.md5sums`. On
+  `gcr.io/distroless/python3-debian12`, 356 libraries and programs were reported as installed by no package; now
+  none are. ([#15](https://github.com/willj4945/whats_in_my_image/issues/15))
+
 ## [0.3.1] - 2026-10-14
 
 Rebuilds the container image on a UBI base that fixes seven high-severity vulnerabilities, including one in OpenSSL,

@@ -414,6 +414,7 @@ class Analyzer:
 
     def _dpkg(self) -> None:
         snaps = []
+        md5sums: dict[str, str] = {}  # package -> its status.d md5sums file (distroless has no info/*.list)
         for ls in self.w.layers:
             if any(p == "var/lib/dpkg/status" or p.startswith("var/lib/dpkg/status.d/") for p in ls.captured):
                 pkgs = []
@@ -428,7 +429,10 @@ class Analyzer:
                 }
                 for p in sorted(sd):
                     if not p.endswith(".md5sums") and (data := self.w.content_at(p, ls.index)):
-                        pkgs += ecosystems.parse_dpkg_status(data)
+                        entry = ecosystems.parse_dpkg_status(data)
+                        pkgs += entry
+                        for pkg in entry:
+                            md5sums[pkg["Package"]] = p + ".md5sums"
                 snaps.append((ls.index, pkgs))
         if not snaps:
             return
@@ -462,11 +466,14 @@ class Analyzer:
                 if p.get("Source"):
                     c.evidence.append(f"Source package: {p['Source']}")
                 self._add(c)
+                files = []
                 for lp in (f"var/lib/dpkg/info/{name}.list", f"var/lib/dpkg/info/{name}:{arch}.list"):
-                    data = self.w.content(lp)
-                    if data:
-                        for f in ecosystems.parse_dpkg_list(data):
-                            self.owner[self.w.resolve(f)] = c.id
+                    if data := self.w.content(lp):
+                        files += ecosystems.parse_dpkg_list(data)
+                if not files and name in md5sums and (data := self.w.content(md5sums[name])):
+                    files = ecosystems.parse_dpkg_md5sums(data)
+                for f in files:
+                    self.owner[self.w.resolve(f)] = c.id
 
     # ---- apk
 

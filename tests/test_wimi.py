@@ -21,7 +21,7 @@ from whats_in_my_image import cli
 from whats_in_my_image.analyze import compute_origins
 from whats_in_my_image.catalog import Catalog, pick_tags
 from whats_in_my_image.describe import describe
-from whats_in_my_image.parsers import gobuild, rpm
+from whats_in_my_image.parsers import ecosystems, gobuild, rpm
 from whats_in_my_image.suppliers import compare_versions
 from whats_in_my_image.vulns import fix_status, parse_grype, parse_harbor
 
@@ -553,6 +553,35 @@ class MetadataOnlyLayers(unittest.TestCase):
         layer = m["layers"][1]
         self.assertEqual(layer["files_replaced"], 3)  # tool, its hard link and the retargeted symlink
         self.assertEqual(layer["files_metadata_only"], len(self.BASE_FILES) - 3)
+
+
+class DistrolessDpkg(unittest.TestCase):
+    """Distroless images have no info/*.list: each package's files are listed in status.d/<name>.md5sums (#15)."""
+
+    def test_status_d_md5sums_give_file_ownership(self):
+        files = {
+            "lib": ("symlink", "usr/lib"),  # merged /usr, as in Debian 12
+            "var/lib/dpkg/status.d/libssl3": b"Package: libssl3\nVersion: 3.0.17-1~deb12u2\nArchitecture: amd64\n"
+            b"Maintainer: Debian OpenSSL Team <pkg-openssl-devel@alioth-lists.debian.net>\n",
+            "var/lib/dpkg/status.d/libssl3.md5sums": b"0123456789abcdef0123456789abcdef  usr/lib/libssl.so.3\n"
+            b"fedcba9876543210fedcba9876543210  lib/libcrypto.so.3\n",
+            "usr/lib/libssl.so.3": ELF + b"ssl",
+            "usr/lib/libcrypto.so.3": ELF + b"crypto",
+            "usr/local/bin/extra": ELF + b"extra",  # owned by no package
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            image = write_oci(Path(tmp) / "img", [make_layer(files)], ["ADD rootfs.tar /"])
+            out = Path(tmp) / "out"
+            with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                rc = cli.main([f"oci:{image}", "--no-catalog", "-o", str(out), "-q", "--formats", "json"])
+            self.assertEqual(rc, 0)
+            m = json.loads(next(out.glob("*.json")).read_text())
+        self.assertEqual([c["name"] for c in m["components"] if c["ecosystem"] == "deb"], ["libssl3"])
+        self.assertEqual([c["name"] for c in m["components"] if c["ecosystem"] == "binary"], ["extra"])
+
+    def test_parse_md5sums(self):
+        data = b"d41d8cd98f00b204e9800998ecf8427e  usr/share/doc/a b/copyright\n\nbad-line\n"
+        self.assertEqual(ecosystems.parse_dpkg_md5sums(data), ["usr/share/doc/a b/copyright"])
 
 
 class VendorFixStatus(unittest.TestCase):
