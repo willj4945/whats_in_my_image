@@ -50,13 +50,13 @@ Security fixes go into the latest release only.
 
 Every push and pull request runs:
 
-| Check | Tool |
-| --- | --- |
-| Static analysis (SAST) | CodeQL (`security-extended`), Bandit |
-| Vulnerable dependencies, secrets, misconfiguration | Trivy, GitHub dependency review |
-| Secrets in the full git history | Gitleaks |
+| Check                                                        | Tool                                   |
+|--------------------------------------------------------------|----------------------------------------|
+| Static analysis (SAST)                                       | CodeQL (`security-extended`), Bandit   |
+| Vulnerable dependencies, secrets, misconfiguration           | Trivy, GitHub dependency review        |
+| Secrets in the full git history                              | Gitleaks                               |
 | Workflow security (injection, permissions, unpinned actions) | zizmor, actionlint, CodeQL for Actions |
-| Supply-chain practices | OpenSSF Scorecard |
+| Supply-chain practices                                       | OpenSSF Scorecard                      |
 
 Every third-party action is pinned to a full commit SHA, and every downloaded tool is verified against its published
 SHA-256 checksum. Workflows run with read-only permissions by default. The tool itself has no third-party runtime

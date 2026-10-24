@@ -89,15 +89,15 @@ Open `provenance-<image>.html` from `./wimi-reports/` (or `./reports/` for the c
 
 The full documentation is at **[willj4945.github.io/whats_in_my_image](https://willj4945.github.io/whats_in_my_image/)**.
 
-| | |
-| --- | --- |
-| [Getting started](https://willj4945.github.io/whats_in_my_image/getting-started/) | Installation, quick start and verifying a release |
-| [User guide](https://willj4945.github.io/whats_in_my_image/guide/) | Image sources, naming the base image, the base image catalog, vulnerabilities, registry access |
-| [Reports](https://willj4945.github.io/whats_in_my_image/reports/) | The HTML report section by section, and the JSON and CSV formats |
-| [CI/CD](https://willj4945.github.io/whats_in_my_image/ci/) | GitLab CI and GitHub Actions examples |
-| [Concepts](https://willj4945.github.io/whats_in_my_image/concepts/) | How attribution works, what is supported, limitations |
-| [Reference](https://willj4945.github.io/whats_in_my_image/reference/) | Every command and option, environment variables |
-| [Developer guide](https://willj4945.github.io/whats_in_my_image/developer/) | Development, the local testbed, branch protection, releases, roadmap |
+|                                                                                   |                                                                                                |
+|-----------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------|
+| [Getting started](https://willj4945.github.io/whats_in_my_image/getting-started/) | Installation, quick start and verifying a release                                              |
+| [User guide](https://willj4945.github.io/whats_in_my_image/guide/)                | Image sources, naming the base image, the base image catalog, vulnerabilities, registry access |
+| [Reports](https://willj4945.github.io/whats_in_my_image/reports/)                 | The HTML report section by section, and the JSON and CSV formats                               |
+| [CI/CD](https://willj4945.github.io/whats_in_my_image/ci/)                        | GitLab CI and GitHub Actions examples                                                          |
+| [Concepts](https://willj4945.github.io/whats_in_my_image/concepts/)               | How attribution works, what is supported, limitations                                          |
+| [Reference](https://willj4945.github.io/whats_in_my_image/reference/)             | Every command and option, environment variables                                                |
+| [Developer guide](https://willj4945.github.io/whats_in_my_image/developer/)       | Development, the local testbed, branch protection, releases, roadmap                           |
 
 ## Contributing
 
