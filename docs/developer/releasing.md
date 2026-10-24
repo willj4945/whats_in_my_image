@@ -8,12 +8,12 @@ release (0.4.0).
 
 Cut a patch release, without waiting for the next milestone, for:
 
-| Trigger                                                                                                          | How soon                                                    |
-|------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------|
-| A vulnerability in `wimi` itself (see the scope in [Security](security.md))                                      | As soon as it is fixed, with a GitHub security advisory     |
-| A newer base image build that fixes a critical vulnerability, or a high one in Python, OpenSSL or glibc          | Within a few days                                           |
-| Wrong attribution: a component, layer or vulnerability credited to the wrong base image or to the application    | Once one or two such fixes are merged                       |
-| A crash, or a regression in a feature of the latest release                                                      | Once one or two such fixes are merged                       |
+| Trigger                                                                                                       | How soon                                                |
+|---------------------------------------------------------------------------------------------------------------|---------------------------------------------------------|
+| A vulnerability in `wimi` itself (see the scope in [Security](security.md))                                   | As soon as it is fixed, with a GitHub security advisory |
+| A newer base image build that fixes a critical vulnerability, or a high one in Python, OpenSSL or glibc       | Within a few days                                       |
+| Wrong attribution: a component, layer or vulnerability credited to the wrong base image or to the application | Once one or two such fixes are merged                   |
+| A crash, or a regression in a feature of the latest release                                                   | Once one or two such fixes are merged                   |
 
 Changes to CI, tests or documentation alone don't need a release; the documentation site deploys from `main`.
 
