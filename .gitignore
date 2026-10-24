@@ -11,3 +11,15 @@ site/
 out
 testbed/.state/
 .venv/
+
+# Secrets and personal settings: never commit
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+.netrc
+.claude/settings.local.json
+CLAUDE.local.md
