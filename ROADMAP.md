@@ -7,7 +7,7 @@ This is a living plan. Items link to issues where one exists. Tick items off in 
 open an issue before starting anything larger than a day's work. The order within each milestone is the suggested
 order of work.
 
-Last reviewed: 2026-10-14.
+Last reviewed: 2026-10-30.
 
 ## Principles
 
@@ -32,11 +32,11 @@ Last reviewed: 2026-10-14.
 
 Small, mostly administrative items that make the project approachable. No release needed.
 
-- [ ] Repository description and topics (`container-security`, `sbom`, `supply-chain`, `devsecops`, `provenance`,
+- [x] Repository description and topics (`container-security`, `sbom`, `supply-chain`, `devsecops`, `provenance`,
       `iron-bank`, ...).
-- [ ] Enable Dependabot security updates. Alerts are already on.
-- [ ] Automatically delete branches after merge.
-- [ ] Enable Discussions for questions that aren't bugs or feature requests.
+- [x] Enable Dependabot security updates.
+- [x] Automatically delete branches after merge.
+- [x] Enable Discussions for questions that aren't bugs or feature requests.
 - [ ] `CONTRIBUTING.md`: setup, the testbed, the checks CI runs, branch and PR conventions, resolving `CHANGELOG.md`
       conflicts.
 - [ ] Code of Conduct (Contributor Covenant).
@@ -63,16 +63,15 @@ Fix the attribution bugs, add a pipeline gate, and make `pipx install whats-in-m
 
 **Pipeline gate**
 
-- [ ] [#12](https://github.com/willj4945/whats_in_my_image/issues/12) `--fail-on` policy with documented exit codes: 0 pass, 1 policy failed, 2 usage or load error, 3 unexpected
-      error. Fail closed when a rule needs data that's missing (for example, no scan ran). In review:
-      [#22](https://github.com/willj4945/whats_in_my_image/pull/22).
+- [x] [#12](https://github.com/willj4945/whats_in_my_image/issues/12) `--fail-on` policy with documented exit codes: 0 pass, 1 policy failed, 2 usage or load error, 3 unexpected
+      error. Fail closed when a rule needs data that's missing (for example, no scan ran).
 
 **Distribution**
 
 - [ ] Publish to PyPI from the release workflow with trusted publishing and attestations. Reserve the `wimi` name too.
 - [ ] `pyproject.toml`: project URLs (docs, source, issues, changelog), classifiers and keywords.
 - [ ] Update the install docs and README for PyPI and `pipx`.
-- [ ] [#7](https://github.com/willj4945/whats_in_my_image/pull/7) Docker Compose example for Docker Desktop on Windows and macOS (in review)
+- [x] [#7](https://github.com/willj4945/whats_in_my_image/pull/7) Docker Compose example for Docker Desktop on Windows and macOS
 
 **Supply chain**
 
