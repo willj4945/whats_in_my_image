@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import contextlib
+import gzip
 import io
 import json
 import os
@@ -227,6 +228,36 @@ class ExitCodes(unittest.TestCase):
             except SystemExit as e:  # argparse
                 rc = e.code
         return rc, out.getvalue(), err.getvalue()
+
+    def assert_clean_load_error(self, image: str, message: str) -> None:
+        rc, _, err = self.run_wimi(image=image)
+        self.assertEqual(rc, 2, err)
+        self.assertIn(message, err)
+        self.assertEqual(len(err.strip().splitlines()), 1, err)
+
+    @unittest.skipIf(os.geteuid() == 0, "root ignores file permissions")
+    def test_unreadable_archive_is_a_load_error(self):
+        archive = self.tmp / "app.tar"
+        archive.write_bytes(b"")
+        archive.chmod(0)
+        self.assert_clean_load_error(str(archive), f"cannot read {archive}: permission denied")
+
+    def test_file_that_is_not_an_archive_is_a_load_error(self):
+        archive = self.tmp / "app.tar"
+        archive.write_bytes(b"not a tar file")
+        self.assert_clean_load_error(str(archive), f"cannot read {archive}:")
+
+    def test_truncated_gzip_archive_is_a_load_error(self):
+        archive = self.tmp / "app.tar.gz"
+        archive.write_bytes(gzip.compress(os.urandom(1 << 20))[: 1 << 19])
+        self.assert_clean_load_error(str(archive), f"cannot read {archive}:")
+        self.assertEqual(list((self.tmp / "cache" / "archives").iterdir()), [])  # nothing for the next run to reuse
+
+    @unittest.skipIf(os.geteuid() == 0, "root ignores file permissions")
+    def test_unreadable_layer_in_an_oci_layout_is_a_load_error(self):
+        layer = max((self.target / "blobs" / "sha256").iterdir(), key=lambda p: p.stat().st_size)
+        layer.chmod(0)
+        self.assert_clean_load_error(f"oci:{self.target}", "permission denied")
 
     def report(self) -> dict:
         return json.loads(next(self.out.glob("*.json")).read_text())
