@@ -365,7 +365,7 @@ def render(m: dict) -> str:
                 + "</td>"
                 + f"<td>{_badge(olabel.get(v['origin'], v['origin']), colors.get(v['origin'], 'var(--muted)'))}"
                 f'<div class="muted small">{("layer " + str(v["layer"] + 1)) if v["layer"] is not None else ""}'
-                f" · {e(v['attribution'])}</div></td>"
+                f" · {e(v['attribution'])} · match: {e(v['match'])}</div></td>"
                 f'<td class="small">{e(v["title"])}</td></tr>'
             )
         vfilters = _filter_chips(

@@ -22,6 +22,9 @@ All notable changes to this project are documented here. The format follows
   in the `wimi-cache` volume, and passes through `WIMI_*`, `TRIVY_*` and `GRYPE_*` settings. `DOCKER_GID` (the group
   that owns the container engine socket) must be set; Compose stops with a hint instead of scanning with no access.
 
+- Each vulnerability in the JSON report has `match` (how it was tied to a component), `purl` and `ecosystem`, and the
+  vulnerabilities CSV and HTML table show `match`. ([#11](https://github.com/willj4945/whats_in_my_image/issues/11))
+
 ### Changed
 
 - An unexpected error now prints a one-line message and exits 3 instead of printing a Python traceback and exiting 1,
@@ -34,6 +37,13 @@ All notable changes to this project are documented here. The format follows
   `/var/lib/dpkg/info/*.list`, so file lists are now read from `/var/lib/dpkg/status.d/<package>.md5sums`. On
   `gcr.io/distroless/python3-debian12`, 356 libraries and programs were reported as installed by no package; now
   none are. ([#15](https://github.com/willj4945/whats_in_my_image/issues/15))
+- Vulnerability attribution uses more of the scanner's evidence, so a finding is less likely to be credited to the
+  wrong party. The package URL and package type from Trivy and Grype are read and compared: a finding for an npm
+  package no longer lands on a Python package of the same name. When the same package is in several layers, the layer
+  the scanner reported decides, including for Harbor, which gives no file path. A version only matches another's
+  prefix at a separator (`1.2` matches `1.2.3`, not `1.24.0`), is labelled as a shortened version, and never overrides
+  the scanner's layer. Copies that nothing can tell apart are labelled instead of being presented as a match.
+  ([#11](https://github.com/willj4945/whats_in_my_image/issues/11))
 
 ## [0.3.1] - 2026-10-14
 
