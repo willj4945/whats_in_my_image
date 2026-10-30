@@ -22,6 +22,11 @@ All notable changes to this project are documented here. The format follows
   in the `wimi-cache` volume, and passes through `WIMI_*`, `TRIVY_*` and `GRYPE_*` settings. `DOCKER_GID` (the group
   that owns the container engine socket) must be set; Compose stops with a hint instead of scanning with no access.
 
+- `wimi` is published to PyPI: `pipx install whats-in-my-image`. The project page lists the documentation, source,
+  issue tracker and changelog.
+- Each GitHub release includes the signed provenance of the wheel and source distribution as a file,
+  `wimi-<version>.intoto.jsonl`, so it can be verified offline with `gh attestation verify --bundle`.
+
 ### Changed
 
 - An unexpected error now prints a one-line message and exits 3 instead of printing a Python traceback and exiting 1,

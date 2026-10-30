@@ -70,13 +70,13 @@ Fix the attribution bugs, add a pipeline gate, and make `pipx install whats-in-m
 **Distribution**
 
 - [ ] Publish to PyPI from the release workflow with trusted publishing and attestations. Reserve the `wimi` name too.
-- [ ] `pyproject.toml`: project URLs (docs, source, issues, changelog), classifiers and keywords.
-- [ ] Update the install docs and README for PyPI and `pipx`.
+- [x] `pyproject.toml`: project URLs (docs, source, issues, changelog), classifiers and keywords.
+- [x] Update the install docs and README for PyPI and `pipx`.
 - [ ] [#7](https://github.com/willj4945/whats_in_my_image/pull/7) Docker Compose example for Docker Desktop on Windows and macOS (in review)
 
 **Supply chain**
 
-- [ ] Attach the signed provenance bundle to each GitHub release, so the Scorecard Signed-Releases check can find it.
+- [x] Attach the signed provenance bundle to each GitHub release, so the Scorecard Signed-Releases check can find it.
       (Releases are already attested, but the bundle isn't a release file.)
 - [x] Pin the remaining tool installs in workflows by hash, not just by version.
 

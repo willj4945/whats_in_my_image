@@ -1,6 +1,6 @@
 <!-- markdownlint-disable MD033 MD041 -->
 <p align="center">
-  <img src="docs/assets/logo.svg" alt="What's In My Image logo" width="120">
+  <img src="https://raw.githubusercontent.com/willj4945/whats_in_my_image/main/docs/assets/logo.svg" alt="What's In My Image logo" width="120">
 </p>
 
 <h1 align="center">What's In My Image (<code>wimi</code>)</h1>
@@ -62,8 +62,8 @@ executive (CISO/CIO) can read in two minutes and an engineer can act on.
 ## Quick start
 
 ```bash
-# Install the wheel from the Releases page (or use the container image below)
-pip install whats_in_my_image-0.3.1-py3-none-any.whl
+# Install from PyPI (or use the container image below)
+pipx install whats-in-my-image
 
 # Scan any image in any registry
 wimi registry.example.mil/team/api:2.4
@@ -107,8 +107,8 @@ ruff check . && ruff format --check .     # lint and formatting
 ```
 
 See the [developer guide](https://willj4945.github.io/whats_in_my_image/developer/) for the project layout, the
-documentation site and the release process, and the [roadmap](ROADMAP.md) for what's planned and where help is
-welcome. To report a security problem, see [SECURITY.md](SECURITY.md).
+documentation site and the release process, and the [roadmap](https://github.com/willj4945/whats_in_my_image/blob/main/ROADMAP.md) for what's planned and where help is
+welcome. To report a security problem, see [SECURITY.md](https://github.com/willj4945/whats_in_my_image/blob/main/SECURITY.md).
 
 ## License
 
