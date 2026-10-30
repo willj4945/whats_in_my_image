@@ -34,6 +34,9 @@ All notable changes to this project are documented here. The format follows
   `/var/lib/dpkg/info/*.list`, so file lists are now read from `/var/lib/dpkg/status.d/<package>.md5sums`. On
   `gcr.io/distroless/python3-debian12`, 356 libraries and programs were reported as installed by no package; now
   none are. ([#15](https://github.com/willj4945/whats_in_my_image/issues/15))
+- Scanner sidecars report the real reason the container engine can't be used: permission denied on the socket (with
+  the `--group-add` to fix it), no socket, nothing listening, a timeout or a bad response, instead of always saying
+  "not responding". ([#17](https://github.com/willj4945/whats_in_my_image/issues/17))
 
 ## [0.3.1] - 2026-10-14
 
