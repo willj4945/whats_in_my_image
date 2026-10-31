@@ -21,6 +21,10 @@ Last reviewed: 2026-10-30.
 
 ## Shipped
 
+- **v0.4.0** (2026-10-30): `pipx install whats-in-my-image`, the `--fail-on` pipeline gate with documented exit codes,
+  vulnerability attribution from the scanner's package URL and layer ([#11](https://github.com/willj4945/whats_in_my_image/issues/11)),
+  distroless file lists ([#15](https://github.com/willj4945/whats_in_my_image/issues/15)), and a container base that
+  fixes a critical vulnerability.
 - **v0.3.1** (2026-10-14): container rebuilt on a UBI base that fixes seven high-severity vulnerabilities (OpenSSL, PCRE2),
   and partial catalog matches are no longer named as the base ([#16](https://github.com/willj4945/whats_in_my_image/issues/16)).
 - **v0.3.0** (2026-10-10): scanner sidecars, the documentation site, the `wimi-docker` wrapper, the local testbed,
@@ -69,13 +73,13 @@ Fix the attribution bugs, add a pipeline gate, and make `pipx install whats-in-m
 **Distribution**
 
 - [ ] Publish to PyPI from the release workflow with trusted publishing and attestations. Reserve the `wimi` name too.
-- [ ] `pyproject.toml`: project URLs (docs, source, issues, changelog), classifiers and keywords.
-- [ ] Update the install docs and README for PyPI and `pipx`.
+- [x] `pyproject.toml`: project URLs (docs, source, issues, changelog), classifiers and keywords.
+- [x] Update the install docs and README for PyPI and `pipx`.
 - [x] [#7](https://github.com/willj4945/whats_in_my_image/pull/7) Docker Compose example for Docker Desktop on Windows and macOS
 
 **Supply chain**
 
-- [ ] Attach the signed provenance bundle to each GitHub release, so the Scorecard Signed-Releases check can find it.
+- [x] Attach the signed provenance bundle to each GitHub release, so the Scorecard Signed-Releases check can find it.
       (Releases are already attested, but the bundle isn't a release file.)
 - [x] Pin the remaining tool installs in workflows by hash, not just by version.
 

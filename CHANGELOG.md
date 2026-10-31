@@ -5,6 +5,18 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-30
+
+Installs with `pipx install whats-in-my-image`, adds a `--fail-on` gate for pipelines, attributes vulnerabilities from
+more of the scanner's evidence, and rebuilds the container image on a base that fixes a critical vulnerability.
+
+### Security
+
+- The container image is built on Red Hat UBI 9 Python 3.12 minimal `9.8-1793277766` (2026-10-29). It fixes
+  CVE-2026-114406 in `ca-certificates` (critical) and CVE-2026-77214 in `expat` (high). The v0.3.1 image has them; this
+  one has no fixable critical or high vulnerabilities.
+  ([#45](https://github.com/willj4945/whats_in_my_image/issues/45))
+
 ### Added
 
 - `--fail-on RULE[,RULE...]` turns the report into a CI gate: `wimi` exits 1 when a rule matches. Rules are `app:`,
@@ -22,6 +34,10 @@ All notable changes to this project are documented here. The format follows
   in the `wimi-cache` volume, and passes through `WIMI_*`, `TRIVY_*` and `GRYPE_*` settings. `DOCKER_GID` (the group
   that owns the container engine socket) must be set; Compose stops with a hint instead of scanning with no access.
 
+- `wimi` is published to PyPI: `pipx install whats-in-my-image`. The project page lists the documentation, source,
+  issue tracker and changelog.
+- Each GitHub release includes the signed provenance of the wheel and source distribution as a file,
+  `wimi-<version>.intoto.jsonl`, so it can be verified offline with `gh attestation verify --bundle`.
 - Each vulnerability in the JSON report has `match` (how it was tied to a component), `purl` and `ecosystem`, and the
   vulnerabilities CSV and HTML table show `match`. ([#11](https://github.com/willj4945/whats_in_my_image/issues/11))
 
@@ -189,7 +205,8 @@ First public release.
 - Licensed under the Apache License 2.0.
 - Container image on GHCR, signed with cosign, with SLSA build provenance and CycloneDX SBOMs.
 
-[Unreleased]: https://github.com/willj4945/whats_in_my_image/compare/v0.3.1...HEAD
+[Unreleased]: https://github.com/willj4945/whats_in_my_image/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/willj4945/whats_in_my_image/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/willj4945/whats_in_my_image/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/willj4945/whats_in_my_image/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/willj4945/whats_in_my_image/compare/v0.1.0...v0.2.0

@@ -7,6 +7,7 @@ name: Release
 #   4. generates CycloneDX SBOMs and signed SLSA build provenance for the wheel, sdist and image
 #   5. runs wimi on its own image and attaches the provenance report
 #   6. creates the GitHub Release with every artifact and a SHA256SUMS file
+#   7. publishes the wheel and sdist to PyPI (trusted publishing), last because a PyPI version can't be replaced
 
 on:
   push:
@@ -135,6 +136,7 @@ jobs:
           trivy rootfs --format cyclonedx --output "release/wimi-${VERSION}-python.cdx.json" /tmp/sbom-root
 
       - name: Build provenance for the Python package
+        id: provenance
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
           subject-path: dist/*
@@ -172,8 +174,10 @@ jobs:
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
+          PROVENANCE_BUNDLE: ${{ steps.provenance.outputs.bundle-path }}
         run: |
           cp dist/* release/
+          cp "${PROVENANCE_BUNDLE}" "release/wimi-${VERSION}.intoto.jsonl"
           (cd release && sha256sum -- * > SHA256SUMS)
           awk -v v="## [${VERSION}]" 'index($0, v) == 1 {on=1; next} on && /^## \[/ {exit} on' CHANGELOG.md > notes.md
           cat >> notes.md <<EOF
@@ -186,6 +190,7 @@ jobs:
 
           \`\`\`bash
           gh attestation verify ${WHEEL} --repo ${GITHUB_REPOSITORY}
+          gh attestation verify ${WHEEL} --repo ${GITHUB_REPOSITORY} --bundle wimi-${VERSION}.intoto.jsonl  # offline
           gh attestation verify oci://${IMAGE}:${VERSION} --repo ${GITHUB_REPOSITORY}
           cosign verify ${IMAGE}@${IMAGE_DIGEST} \\
             --certificate-identity-regexp "^${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/" \\
@@ -195,3 +200,19 @@ jobs:
           EOF
           gh release create "${GITHUB_REF_NAME}" release/* \
             --title "v${VERSION}" --notes-file notes.md --verify-tag
+
+  pypi:
+    name: Publish to PyPI
+    needs: publish
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/whats-in-my-image/
+    permissions:
+      id-token: write # trusted publishing and PyPI attestations; there is no stored token
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
