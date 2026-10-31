@@ -9,6 +9,7 @@ from __future__ import annotations
 import io
 import json
 import os
+import socket
 import socketserver
 import tarfile
 import tempfile
@@ -412,6 +413,43 @@ class SidecarRuns(SidecarTestCase):
                 {"Type": "bind", "Source": "/srv/certs", "Target": "/certs", "ReadOnly": False},
             ],
         )
+
+
+class EngineUnavailable(SidecarTestCase):
+    def reason(self) -> str:
+        self.assertIsNone(self.run_scan())
+        self.assertEqual(len(self.logs), 2, self.logs)  # trivy, grype
+        return self.logs[0]
+
+    @unittest.skipIf(os.geteuid() == 0, "root ignores file permissions")
+    def test_permission_denied_says_so_and_how_to_fix_it(self):
+        os.chmod(self.sock, 0)
+        reason = self.reason()
+        self.assertIn(f"permission denied on {self.sock}", reason)
+        self.assertIn(f"--group-add $(stat -c %g {self.sock})", reason)
+        self.assertNotIn("not responding", reason)
+
+    def test_missing_socket(self):
+        os.environ["DOCKER_HOST"] = f"unix://{self.sock}.missing"
+        self.assertIn(f"no container engine socket at {self.sock}.missing", self.reason())
+
+    def test_nothing_listening(self):
+        dead = os.path.join(self.tmp.name, "dead.sock")
+        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
+            s.bind(dead)
+        os.environ["DOCKER_HOST"] = f"unix://{dead}"
+        self.assertIn(f"nothing is listening on {dead}", self.reason())
+
+    def test_timeout(self):
+        with mock.patch.object(eng._UnixConnection, "connect", side_effect=socket.timeout("timed out")):
+            self.assertIn("did not answer within 5 seconds", self.reason())
+
+    def test_bad_response(self):
+        with mock.patch.object(eng.Engine, "_request", return_value=(500, b"")):
+            self.assertIn("answered /_ping with HTTP 500", self.reason())
+
+    def test_healthy_engine_has_no_reason(self):
+        self.assertEqual(eng.Engine(self.sock).unavailable(), "")
 
 
 class ScannerSelection(SidecarTestCase):

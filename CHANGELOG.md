@@ -26,6 +26,8 @@ All notable changes to this project are documented here. The format follows
   issue tracker and changelog.
 - Each GitHub release includes the signed provenance of the wheel and source distribution as a file,
   `wimi-<version>.intoto.jsonl`, so it can be verified offline with `gh attestation verify --bundle`.
+- Each vulnerability in the JSON report has `match` (how it was tied to a component), `purl` and `ecosystem`, and the
+  vulnerabilities CSV and HTML table show `match`. ([#11](https://github.com/willj4945/whats_in_my_image/issues/11))
 
 ### Changed
 
@@ -39,6 +41,20 @@ All notable changes to this project are documented here. The format follows
   `/var/lib/dpkg/info/*.list`, so file lists are now read from `/var/lib/dpkg/status.d/<package>.md5sums`. On
   `gcr.io/distroless/python3-debian12`, 356 libraries and programs were reported as installed by no package; now
   none are. ([#15](https://github.com/willj4945/whats_in_my_image/issues/15))
+- Vulnerability attribution uses more of the scanner's evidence, so a finding is less likely to be credited to the
+  wrong party. The package URL and package type from Trivy and Grype are read and compared: a finding for an npm
+  package no longer lands on a Python package of the same name. When the same package is in several layers, the layer
+  the scanner reported decides, including for Harbor, which gives no file path. A version only matches another's
+  prefix at a separator (`1.2` matches `1.2.3`, not `1.24.0`), is labelled as a shortened version, and never overrides
+  the scanner's layer. Copies that nothing can tell apart are labelled instead of being presented as a match.
+  ([#11](https://github.com/willj4945/whats_in_my_image/issues/11))
+- Scanner sidecars report the real reason the container engine can't be used: permission denied on the socket (with
+  the `--group-add` to fix it), no socket, nothing listening, a timeout or a bad response, instead of always saying
+  "not responding". ([#17](https://github.com/willj4945/whats_in_my_image/issues/17))
+- An image that can't be read (permission denied, a file that isn't an archive, a truncated `.gz`, an unreadable layer
+  in an OCI layout) prints one clear line and exits 2, instead of being reported as an unexpected error. A truncated
+  `.gz` no longer leaves a partial archive in the cache for later runs to reuse.
+  ([#18](https://github.com/willj4945/whats_in_my_image/issues/18))
 
 ## [0.3.1] - 2026-10-14
 
