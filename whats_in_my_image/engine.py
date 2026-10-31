@@ -55,7 +55,11 @@ class _UnixConnection(http.client.HTTPConnection):
     def connect(self) -> None:
         s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         s.settimeout(self.timeout)
-        s.connect(self._path)
+        try:
+            s.connect(self._path)
+        except OSError:
+            s.close()
+            raise
         self.sock = s
 
 
@@ -107,11 +111,24 @@ class Engine:
 
     # ------------------------------------------------------------------ system
 
-    def ping(self) -> bool:
+    def unavailable(self) -> str:
+        """Why this engine can't be used, or "" if it answers."""
+        path = self.socket_path
         try:
-            return self._request("GET", "/_ping", timeout=5)[0] == 200
-        except EngineError:
-            return False
+            status = self._request("GET", "/_ping", timeout=5)[0]
+        except EngineError as e:
+            if isinstance(e.__cause__, PermissionError):
+                return (
+                    f"permission denied on {path}: run as a member of its group, e.g. --group-add $(stat -c %g {path})"
+                )
+            if isinstance(e.__cause__, FileNotFoundError):
+                return f"there is no container engine socket at {path}"
+            if isinstance(e.__cause__, ConnectionRefusedError):
+                return f"nothing is listening on {path} (is the container engine running?)"
+            if isinstance(e.__cause__, socket.timeout):
+                return f"the container engine at {path} did not answer within 5 seconds"
+            return f"the container engine at {path} is not responding ({e})"
+        return "" if status == 200 else f"the container engine at {path} answered /_ping with HTTP {status}"
 
     def version(self) -> dict:
         return self._json("GET", "/version")
