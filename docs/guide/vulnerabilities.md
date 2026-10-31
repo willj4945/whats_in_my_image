@@ -38,8 +38,9 @@ component, so every CVE is credited to the party that introduced it, and that ca
 * **Where the data came from:** the scanner and version, whether it ran as a binary or from which container image,
   and the date its vulnerability data was built. Data more than 30 days old is called out in the bottom line.
 * **Who introduced it:** the base image or the application build. Each finding is matched to the traced component it
-  affects. If no component matches, the layer reported by the scanner is used instead, and if there is none the
-  finding is shown as *Unattributed* rather than guessed. The report states which method was used for every finding.
+  affects, from the strongest evidence to the weakest (see [How a finding is matched](#how-a-finding-is-matched)). If
+  no component matches, the layer reported by the scanner is used instead, and if there is none the finding is shown
+  as *Unattributed* rather than guessed. The report states which method was used for every finding.
 * **Severity**, with critical and high findings summarised in the bottom line.
 * **Vendor fix status**, read from the scanner (Trivy `Status`, Grype `fix.state`):
 
@@ -54,3 +55,21 @@ component, so every CVE is credited to the party that introduced it, and that ca
 
 "Will not fix", "end of life" and "deferred" findings are raised as their own findings, and the bottom line states
 how many vulnerabilities will never be removed by updating and need a risk decision.
+
+## How a finding is matched
+
+The `match` value in the JSON, the vulnerabilities CSV and the HTML table says how each finding was tied to a component:
+
+| `match`                  | Meaning                                                                                                                  |
+|--------------------------|--------------------------------------------------------------------------------------------------------------------------|
+| `purl`                   | The scanner's package URL is the component's. Trivy and Grype report one; Harbor doesn't.                                |
+| `name+ecosystem+version` | Same name, package type and exact version. A package of the same name from another ecosystem is never matched.           |
+| `name+version`           | Same name and exact version, when the scanner gives no package type.                                                     |
+| `prefix`                 | Same name, and one version is a shortened form of the other (`1.2` and `1.2.3`, not `1.24.0`). Weaker: check it by hand. |
+| `layer`                  | No component matched, so the layer the scanner reported is used. A shortened version never overrides that layer.         |
+| `none`                   | Nothing to go on. The finding is shown as *Unattributed*.                                                                |
+
+The same package can be installed in more than one layer, for example in a system Python and a virtual environment.
+`wimi` then picks the copy in the layer the scanner reported, then the one at the scanner's file path. If nothing
+separates copies in different layers, the attribution says *matched to one of N copies in different layers*, because
+the origin shown is then a choice between them, not proof.
