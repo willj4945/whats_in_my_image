@@ -10,6 +10,7 @@ import contextlib
 import gzip
 import io
 import json
+import os
 import shutil
 import subprocess
 import tarfile
@@ -182,10 +183,19 @@ class _DirStore:
         return (self.root / name).read_bytes()
 
     def open(self, name: str) -> BinaryIO:
-        return open(self.root / name, "rb")
+        try:
+            return open(self.root / name, "rb")
+        except OSError as e:  # layers open lazily, after load_image() has returned
+            raise _unreadable(self.root / name, e) from None
 
     def size(self, name: str) -> int:
         return (self.root / name).stat().st_size
+
+
+def _unreadable(spec, e: Exception) -> SourceError:
+    if isinstance(e, OSError) and e.strerror:
+        return SourceError(f"cannot read {e.filename or spec}: {e.strerror.lower()}")
+    return SourceError(f"cannot read {spec}: {e}")
 
 
 def _blob_path(digest: str) -> str:
@@ -247,8 +257,13 @@ def load_archive(path: Path, platform: str, cache_dir: Path, display_name: str |
         plain = cache_dir / "archives" / (path.name + ".tar")
         if not plain.exists():
             plain.parent.mkdir(parents=True, exist_ok=True)
-            with gzip.open(path, "rb") as src, open(plain, "wb") as dst:
-                shutil.copyfileobj(src, dst, 1 << 20)
+            partial_file = plain.with_name(f"{plain.name}.{os.getpid()}.partial")
+            try:  # only a complete archive may land at `plain`, or later runs would reuse a truncated one
+                with gzip.open(path, "rb") as src, open(partial_file, "wb") as dst:
+                    shutil.copyfileobj(src, dst, 1 << 20)
+                partial_file.replace(plain)
+            finally:
+                partial_file.unlink(missing_ok=True)
         path = plain
     return _load_from_store(_TarStore(path), display_name or path.name, "archive", platform)
 
@@ -319,6 +334,13 @@ def load_image(
     ``docker:NAME`` / ``podman:NAME``                                 - local container engine
     anything else                                                     - registry reference
     """
+    try:
+        return _load_image(spec, platform, cache_dir, fetch_layers, log, client_opts)
+    except (OSError, EOFError, tarfile.TarError) as e:  # EOFError: a truncated .gz
+        raise _unreadable(spec, e) from None
+
+
+def _load_image(spec: str, platform: str, cache_dir: Path, fetch_layers: bool, log, client_opts: dict) -> Image:
     for prefix in ("docker-archive:", "oci-archive:"):
         if spec.startswith(prefix):
             return load_archive(Path(spec[len(prefix) :]), platform, cache_dir)
