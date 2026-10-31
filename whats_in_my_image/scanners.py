@@ -153,8 +153,8 @@ class _Context:
             self.engine_reason = how
             return None
         e = eng.Engine(path)
-        if not e.ping():
-            self.engine_reason = f"the container engine at {path} is not responding"
+        self.engine_reason = e.unavailable()
+        if self.engine_reason:
             return None
         self._engine = e
         _remove_stale(e)

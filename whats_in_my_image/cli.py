@@ -327,7 +327,11 @@ def scan_main(argv: list[str]) -> int:
     # ---- walk layers, attribute, analyse
     log(f"Analysing {image.name} ({len(image.layers)} layers)")
     walker = Walker()
-    walker.scan(image, log)
+    try:
+        walker.scan(image, log)
+    except SourceError as e:
+        print(f"error: {e}", file=sys.stderr)
+        return EXIT_USAGE
     history, _ = image.layer_history()
     origins, per_layer, notes = compute_origins(image.diff_ids, bases, history, image.labels, args.app_name)
     notes += stale_notes
