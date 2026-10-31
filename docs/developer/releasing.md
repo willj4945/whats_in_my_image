@@ -44,7 +44,9 @@ The Release workflow then:
 3. pushes the image to GHCR and signs it with cosign (keyless, Sigstore),
 4. generates CycloneDX SBOMs and signed SLSA build provenance for the wheel, sdist and image,
 5. runs `wimi` on its own image and attaches the provenance report,
-6. creates the GitHub Release with every artifact and a `SHA256SUMS` file.
+6. creates the GitHub Release with every artifact, the signed provenance bundle and a `SHA256SUMS` file,
+7. publishes the wheel and source distribution to PyPI with trusted publishing, in the `pypi` environment. It runs
+   last because PyPI never lets a version be replaced. If only this job fails, re-run it; don't tag a new version.
 
 !!! warning
     The Release workflow refuses to publish if the tag does not match the package version, or if the image has a
