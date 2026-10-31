@@ -34,6 +34,10 @@ All notable changes to this project are documented here. The format follows
   `/var/lib/dpkg/info/*.list`, so file lists are now read from `/var/lib/dpkg/status.d/<package>.md5sums`. On
   `gcr.io/distroless/python3-debian12`, 356 libraries and programs were reported as installed by no package; now
   none are. ([#15](https://github.com/willj4945/whats_in_my_image/issues/15))
+- An image that can't be read (permission denied, a file that isn't an archive, a truncated `.gz`, an unreadable layer
+  in an OCI layout) prints one clear line and exits 2, instead of being reported as an unexpected error. A truncated
+  `.gz` no longer leaves a partial archive in the cache for later runs to reuse.
+  ([#18](https://github.com/willj4945/whats_in_my_image/issues/18))
 
 ## [0.3.1] - 2026-10-14
 
