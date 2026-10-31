@@ -17,13 +17,13 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from whats_in_my_image import cli
+from whats_in_my_image import cli, vulns
 from whats_in_my_image.analyze import compute_origins
 from whats_in_my_image.catalog import Catalog, pick_tags
 from whats_in_my_image.describe import describe
 from whats_in_my_image.parsers import ecosystems, gobuild, rpm
 from whats_in_my_image.suppliers import compare_versions
-from whats_in_my_image.vulns import fix_status, parse_grype, parse_harbor
+from whats_in_my_image.vulns import Vuln, attribute, fix_status, parse_grype, parse_harbor, parse_trivy
 
 ELF = b"\x7fELF" + b"\0" * 124
 WH = None  # marker for a whiteout
@@ -363,6 +363,7 @@ class EndToEnd(unittest.TestCase):
         self.assertIn('data-fix="end_of_life"', html)
         vcsv = next((self.tmp / "out").glob("*-vulnerabilities.csv")).read_text()
         self.assertIn("vendor_fix_status", vcsv.splitlines()[0])
+        self.assertIn("match", vcsv.splitlines()[0])
         self.assertIn("No longer supported by vendor", vcsv)
         # layer cake: one slice per layer, each linked to its build step, with the base seam marked
         self.assertEqual(html.count('class="slice"'), 3)
@@ -611,6 +612,152 @@ class VendorFixStatus(unittest.TestCase):
             "vulnerabilities": [{"id": "CVE-7", "severity": "High", "package": "x", "version": "1", "fix_version": ""}]
         }
         self.assertEqual(parse_harbor(harbor, {})[0].fix_status, "unknown")
+
+
+def component(name, version, ecosystem, layer, paths=(), purl=""):
+    return {
+        "id": f"{ecosystem}:{name}:{version}:{layer}",
+        "name": name,
+        "version": version,
+        "ecosystem": ecosystem,
+        "layer": layer,
+        "paths": list(paths),
+        "purl": purl,
+    }
+
+
+class VulnAttribution(unittest.TestCase):
+    PER_LAYER = ["base0", "app", "app"]
+
+    def attribute(self, components, **finding):
+        finding = {"id": "CVE-1", "severity": "HIGH", "fixed_version": "", "title": "", **finding}
+        v = Vuln(**finding)
+        attribute([v], components, self.PER_LAYER)
+        return v
+
+    def test_tie_goes_to_the_layer_the_scanner_reported(self):
+        cands = [component("req", "2.0", "python", 0), component("req", "2.0", "python", 1)]
+        v = self.attribute(cands, package="req", version="2.0", layer=1, tool="Harbor (Trivy)")
+        self.assertEqual((v.layer, v.origin, v.match), (1, "app", "name+version"))
+        self.assertEqual(v.attribution, "matched to traced component")
+
+    def test_tie_with_no_evidence_is_not_presented_as_proof(self):
+        cands = [component("req", "2.0", "python", 0), component("req", "2.0", "python", 1)]
+        v = self.attribute(cands, package="req", version="2.0", tool="Harbor (Trivy)")
+        self.assertEqual(v.attribution, "matched to one of 2 copies in different layers")
+
+    def test_path_breaks_a_tie_within_a_layer(self):
+        cands = [component("req", "2.0", "python", 1, ["a/req"]), component("req", "2.0", "python", 1, ["b/req"])]
+        v = self.attribute(cands, package="req", version="2.0", layer=1, path="b/req/METADATA", tool="Trivy")
+        self.assertEqual(v.component_id, cands[1]["id"])
+
+    def test_another_ecosystems_package_of_the_same_name_does_not_match(self):
+        cands = [component("debug", "4.3.4", "python", 0)]
+        v = self.attribute(cands, package="debug", version="4.3.4", layer=1, ecosystem="npm", tool="Trivy")
+        self.assertEqual((v.component_id, v.layer, v.origin, v.match), ("", 1, "app", "layer"))
+        self.assertEqual(v.attribution, "layer reported by Trivy")
+
+    def test_ecosystem_outside_what_wimi_traces_does_not_match(self):
+        cands = [component("debug", "4.3.4", "python", 0)]
+        v = self.attribute(cands, package="debug", version="4.3.4", ecosystem="gem", tool="Trivy")
+        self.assertEqual((v.origin, v.match), ("unknown", "none"))
+        self.assertEqual(v.attribution, "could not be attributed")
+
+    def test_name_and_ecosystem_match(self):
+        cands = [component("x", "1.0", "python", 0), component("x", "1.0", "go-module", 1)]
+        v = self.attribute(cands, package="x", version="1.0", ecosystem="go", tool="Grype")
+        self.assertEqual((v.layer, v.match), (1, "name+ecosystem+version"))
+
+    def test_short_version_is_not_a_prefix_of_a_longer_number(self):
+        v = self.attribute([component("foo", "1.24.0", "python", 1)], package="foo", version="1.2", tool="Trivy")
+        self.assertEqual((v.component_id, v.match), ("", "none"))
+
+    def test_shortened_version_is_labelled(self):
+        v = self.attribute([component("foo", "1.2.3", "python", 1)], package="foo", version="1.2", tool="Trivy")
+        self.assertEqual((v.layer, v.match), (1, "prefix"))
+        self.assertEqual(v.attribution, "matched to traced component by a shortened version")
+
+    def test_scanner_layer_beats_a_shortened_version(self):
+        v = self.attribute(
+            [component("foo", "1.2.3", "python", 0)], package="foo", version="1.2", layer=1, tool="Trivy"
+        )
+        self.assertEqual((v.component_id, v.layer, v.match), ("", 1, "layer"))
+
+    def test_package_url_settles_what_the_name_cannot(self):
+        # Scanners name the package after the jar or the source package; only the package URL is the same.
+        cands = [
+            component("guava", "33.0", "java", 0, purl="pkg:maven/other.group/guava@33.0"),
+            component("com.google.guava:guava", "33.0", "java", 1, purl="pkg:maven/com.google.guava/guava@33.0"),
+        ]
+        v = self.attribute(
+            cands, package="guava", version="33.0", purl="pkg:maven/com.google.guava/guava@33.0", tool="Grype"
+        )
+        self.assertEqual((v.component_id, v.match), (cands[1]["id"], "purl"))
+
+    def test_package_urls_compare_across_spellings(self):
+        for ours, theirs in (
+            (
+                "pkg:rpm/openssl-libs@1:3.0.7-27.el9?arch=x86_64",
+                "pkg:rpm/redhat/openssl-libs@3.0.7-27.el9?arch=x86_64&epoch=1",
+            ),
+            (
+                "pkg:rpm/openssl-libs@1:3.0.7-27.el9?arch=x86_64",
+                "pkg:rpm/rhel/openssl-libs@1:3.0.7-27.el9?distro=rhel-9",
+            ),
+            ("pkg:deb/debian/libc6@2.36-9?arch=amd64", "pkg:deb/debian/libc6@2.36-9?arch=amd64&distro=debian-12"),
+            ("pkg:pypi/typing-extensions@4.0", "pkg:pypi/typing_extensions@4.0"),
+            ("pkg:npm/%40babel/core@7.0.0", "pkg:npm/%40babel/core@7.0.0"),
+        ):
+            self.assertEqual(vulns._purl_key(ours)[0], vulns._purl_key(theirs)[0], (ours, theirs))
+
+    def test_package_url_of_another_architecture_does_not_match(self):
+        cands = [component("libc6", "2.36", "deb", 0, purl="pkg:deb/debian/libc6@2.36?arch=i386")]
+        v = self.attribute(
+            cands,
+            package="libc6",
+            version="2.36",
+            purl="pkg:deb/debian/libc6@2.36?arch=amd64",
+            ecosystem="deb",
+            tool="Trivy",
+        )
+        self.assertEqual(v.match, "name+ecosystem+version")  # the package manager's name still identifies it
+
+    def test_parsers_read_the_package_identity(self):
+        purl = "pkg:deb/debian/zlib1g@1.2?arch=amd64"
+        trivy = {
+            "Results": [
+                {"Type": "debian", "Vulnerabilities": [{"PkgName": "a", "PkgIdentifier": {"PURL": purl}}]},
+                {"Type": "python-pkg", "Vulnerabilities": [{"PkgName": "b"}]},
+                {"Type": "cbl-mariner", "Vulnerabilities": [{"PkgName": "c"}]},
+                {"Type": "gemspec", "Vulnerabilities": [{"PkgName": "d"}]},
+            ]
+        }
+        self.assertEqual([(v.purl, v.ecosystem) for v in parse_trivy(trivy, {})][:2], [(purl, "deb"), ("", "python")])
+        self.assertEqual([v.ecosystem for v in parse_trivy(trivy, {})][2:], ["rpm", "gemspec"])
+        grype = {
+            "matches": [
+                {"vulnerability": {}, "artifact": {"purl": "pkg:golang/x/y@v1", "type": "go-module"}},
+                {"vulnerability": {}, "artifact": {"type": "java-archive"}},
+                {"vulnerability": {}, "artifact": {}},
+            ]
+        }
+        self.assertEqual([v.ecosystem for v in parse_grype(grype, {})], ["go", "java", ""])
+
+    def test_harbor_layer_breaks_a_tie(self):
+        doc = {
+            "vulnerabilities": [
+                {
+                    "id": "CVE-1",
+                    "severity": "High",
+                    "package": "req",
+                    "version": "2.0",
+                    "layer": {"diff_id": "sha256:b"},
+                }
+            ]
+        }
+        found = parse_harbor(doc, {"sha256:a": 0, "sha256:b": 1})
+        attribute(found, [component("req", "2.0", "python", 0), component("req", "2.0", "python", 1)], self.PER_LAYER)
+        self.assertEqual((found[0].layer, found[0].origin), (1, "app"))
 
 
 class Parsers(unittest.TestCase):

@@ -10,7 +10,7 @@
 | `origins`              | Each origin (base images and the application build), with its layers and the evidence for it.                                                                                                                                         |
 | `layers`               | Every layer with its origin, size, build command and what it added.                                                                                                                                                                   |
 | `components`           | Every traced component: name, version, type, supplier, layer, evidence, concerns, licence and purl.                                                                                                                                   |
-| `vulns`                | Every finding with severity, fix status and attribution, or `null` if no vulnerability data was supplied.                                                                                                                             |
+| `vulns`                | Every finding with severity, fix status, attribution, `match`, and the scanner's `purl` and `ecosystem`, or `null` if no vulnerability data was supplied.                                                                             |
 | `vuln_scan`            | When `wimi` ran the scanner: the tool and version, `mode` (`binary` or `container`), the container image and digest, and the vulnerability data's build date (`db_date`) and age in days (`db_age_days`). Empty for imported reports. |
 | `takeaways`            | The bottom line: each sentence with its tone (`good`, `bad`, `warn` or `neutral`), as the report shows it.                                                                                                                            |
 | `findings`             | The findings that need attention, each with its severity and the origin responsible for it.                                                                                                                                           |
@@ -47,11 +47,12 @@
 
 `provenance-<image>-vulnerabilities.csv`, one row per finding. Written only when vulnerability data was supplied.
 
-| Column                                          | Meaning                                                                                                  |
-|-------------------------------------------------|----------------------------------------------------------------------------------------------------------|
-| `id`, `severity`, `title`                       | The finding as reported by the scanner.                                                                  |
-| `package`, `installed_version`, `fixed_version` | The affected package and the version that fixes it.                                                      |
-| `vendor_fix_status`                             | Fix available, no fix released yet, deferred, will not fix, no longer supported, or under investigation. |
-| `introduced_by`                                 | The origin that introduced it.                                                                           |
-| `layer`                                         | The layer it was traced to.                                                                              |
-| `attribution`                                   | How it was traced: matched to a traced component, or the layer reported by the scanner.                  |
+| Column                                          | Meaning                                                                                                   |
+|-------------------------------------------------|-----------------------------------------------------------------------------------------------------------|
+| `id`, `severity`, `title`                       | The finding as reported by the scanner.                                                                   |
+| `package`, `installed_version`, `fixed_version` | The affected package and the version that fixes it.                                                       |
+| `vendor_fix_status`                             | Fix available, no fix released yet, deferred, will not fix, no longer supported, or under investigation.  |
+| `introduced_by`                                 | The origin that introduced it.                                                                            |
+| `layer`                                         | The layer it was traced to.                                                                               |
+| `attribution`                                   | How it was traced: matched to a traced component, or the layer reported by the scanner.                   |
+| `match`                                         | The evidence for that match: `purl`, `name+ecosystem+version`, `name+version`, `prefix`, `layer`, `none`. |

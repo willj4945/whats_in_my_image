@@ -554,6 +554,7 @@ def _write_vuln_csv(path: Path, m: dict) -> Path:
                 "introduced_by",
                 "layer",
                 "attribution",
+                "match",
                 "title",
             ]
         )
@@ -569,6 +570,7 @@ def _write_vuln_csv(path: Path, m: dict) -> Path:
                     labels.get(v["origin"], v["origin"]),
                     "" if v["layer"] is None else v["layer"] + 1,
                     v["attribution"],
+                    v["match"],
                     v["title"],
                 ]
             )
