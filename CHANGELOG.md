@@ -37,6 +37,10 @@ All notable changes to this project are documented here. The format follows
 - Scanner sidecars report the real reason the container engine can't be used: permission denied on the socket (with
   the `--group-add` to fix it), no socket, nothing listening, a timeout or a bad response, instead of always saying
   "not responding". ([#17](https://github.com/willj4945/whats_in_my_image/issues/17))
+- An image that can't be read (permission denied, a file that isn't an archive, a truncated `.gz`, an unreadable layer
+  in an OCI layout) prints one clear line and exits 2, instead of being reported as an unexpected error. A truncated
+  `.gz` no longer leaves a partial archive in the cache for later runs to reuse.
+  ([#18](https://github.com/willj4945/whats_in_my_image/issues/18))
 
 ## [0.3.1] - 2026-10-14
 

@@ -59,7 +59,7 @@ Fix the attribution bugs, add a pipeline gate, and make `pipx install whats-in-m
 - [x] [#15](https://github.com/willj4945/whats_in_my_image/issues/15) Distroless images: `status.d` file lists aren't read, so every file is reported as unowned
 - [x] [#16](https://github.com/willj4945/whats_in_my_image/issues/16) A partial catalog match is shown under the wrong base image's name
 - [x] [#17](https://github.com/willj4945/whats_in_my_image/issues/17) The scanner sidecar says the engine is "not responding" when the socket is permission denied
-- [ ] [#18](https://github.com/willj4945/whats_in_my_image/issues/18) An unreadable input file crashes with a traceback instead of a clean error
+- [x] [#18](https://github.com/willj4945/whats_in_my_image/issues/18) An unreadable input file crashes with a traceback instead of a clean error
 
 **Pipeline gate**
 
