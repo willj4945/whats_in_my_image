@@ -21,6 +21,10 @@ Last reviewed: 2026-10-30.
 
 ## Shipped
 
+- **v0.4.0** (2026-10-30): `pipx install whats-in-my-image`, the `--fail-on` pipeline gate with documented exit codes,
+  vulnerability attribution from the scanner's package URL and layer ([#11](https://github.com/willj4945/whats_in_my_image/issues/11)),
+  distroless file lists ([#15](https://github.com/willj4945/whats_in_my_image/issues/15)), and a container base that
+  fixes a critical vulnerability.
 - **v0.3.1** (2026-10-14): container rebuilt on a UBI base that fixes seven high-severity vulnerabilities (OpenSSL, PCRE2),
   and partial catalog matches are no longer named as the base ([#16](https://github.com/willj4945/whats_in_my_image/issues/16)).
 - **v0.3.0** (2026-10-10): scanner sidecars, the documentation site, the `wimi-docker` wrapper, the local testbed,

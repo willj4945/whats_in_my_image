@@ -12,13 +12,13 @@ Every release is built by GitHub Actions and ships with:
 The exact commands, filled in for that release, are in each release's notes. In general:
 
 ```bash
-gh attestation verify whats_in_my_image-0.3.1-py3-none-any.whl --repo willj4945/whats_in_my_image
-gh attestation verify oci://ghcr.io/willj4945/whats_in_my_image:0.3.1 --repo willj4945/whats_in_my_image
+gh attestation verify whats_in_my_image-0.4.0-py3-none-any.whl --repo willj4945/whats_in_my_image
+gh attestation verify oci://ghcr.io/willj4945/whats_in_my_image:0.4.0 --repo willj4945/whats_in_my_image
 sha256sum --check SHA256SUMS
 ```
 
 To verify without asking GitHub for the attestation, for example on an air-gapped host, pass the bundle from the
-release: add `--bundle wimi-0.3.1.intoto.jsonl` to the first command.
+release: add `--bundle wimi-0.4.0.intoto.jsonl` to the first command.
 
 The packages on PyPI are the same files, built by the same workflow through trusted publishing, so the wheel you
 download from PyPI verifies with the same command. PyPI also shows its own attestation for each file.

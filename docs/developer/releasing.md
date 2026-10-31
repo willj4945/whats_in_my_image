@@ -2,9 +2,9 @@
 
 ## When to release
 
-Versions follow [Semantic Versioning](https://semver.org/). A patch release (for example 0.3.1) holds only
+Versions follow [Semantic Versioning](https://semver.org/). A patch release (for example 0.4.1) holds only
 backwards-compatible fixes. New options, and changes in behaviour such as different exit codes, wait for the next minor
-release (0.4.0).
+release (0.5.0).
 
 Cut a patch release, without waiting for the next milestone, for:
 
@@ -33,7 +33,7 @@ maintenance branch.
 3. Commit, then tag and push:
 
     ```bash
-    git tag -a v0.3.1 -m "v0.3.1" && git push origin v0.3.1
+    git tag -a v0.4.0 -m "v0.4.0" && git push origin v0.4.0
     ```
 
 The Release workflow then:
