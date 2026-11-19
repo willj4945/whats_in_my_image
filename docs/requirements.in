@@ -1,4 +1,4 @@
 # Build dependencies for the documentation site only. `wimi` itself has no dependencies.
 # Regenerate the lock file after editing:
 #   pip-compile --generate-hashes --strip-extras docs/requirements.in -o docs/requirements.txt
-mkdocs-material==9.7.7
+mkdocs-material==9.8.0
