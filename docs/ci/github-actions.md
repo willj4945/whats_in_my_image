@@ -32,7 +32,7 @@ jobs:
           mkdir -p reports
           docker run --rm -u "$(id -u):0" -v "$PWD:/work" -w /work \
             -e WIMI_USERNAME -e WIMI_PASSWORD \
-            ghcr.io/willj4945/whats_in_my_image:0.3.1 \
+            ghcr.io/willj4945/whats_in_my_image:0.4.0 \
             "$IMAGE" --catalog ci/base-catalog.json -o reports \
             --fail-on risky-step,unattributed
 

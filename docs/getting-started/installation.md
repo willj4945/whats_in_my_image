@@ -3,17 +3,24 @@
 `wimi` uses **only the Python standard library**, so it has no dependencies to vet and works on air-gapped or
 locked-down hosts.
 
-=== "From a release (recommended)"
-
-    Download the wheel from the [Releases](https://github.com/willj4945/whats_in_my_image/releases) page,
-    [verify it](verify.md), then install it:
+=== "From PyPI (recommended)"
 
     ```bash
-    pip install whats_in_my_image-0.3.1-py3-none-any.whl
+    pipx install whats-in-my-image
     wimi --version
     ```
 
-    This provides the `wimi` command.
+    This provides the `wimi` command. `pipx` gives it its own environment; `pip install whats-in-my-image` works too.
+
+=== "Air-gapped hosts"
+
+    The wheel has no dependencies, so it is the only file to carry across. Download it from the
+    [Releases](https://github.com/willj4945/whats_in_my_image/releases) page, [verify it](verify.md), then install it:
+
+    ```bash
+    pip install whats_in_my_image-0.4.0-py3-none-any.whl
+    wimi --version
+    ```
 
 === "Container image"
 
@@ -44,7 +51,7 @@ locked-down hosts.
     See [The `wimi-docker` wrapper](#the-wimi-docker-wrapper) for what it sets up.
 
     !!! tip
-        Pin a version tag (for example `:0.3.1`) or a digest rather than `:latest` in pipelines, so every run uses
+        Pin a version tag (for example `:0.4.0`) or a digest rather than `:latest` in pipelines, so every run uses
         the release you verified.
 
 === "From source"

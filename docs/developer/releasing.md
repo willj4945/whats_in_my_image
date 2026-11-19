@@ -2,9 +2,9 @@
 
 ## When to release
 
-Versions follow [Semantic Versioning](https://semver.org/). A patch release (for example 0.3.1) holds only
+Versions follow [Semantic Versioning](https://semver.org/). A patch release (for example 0.4.1) holds only
 backwards-compatible fixes. New options, and changes in behaviour such as different exit codes, wait for the next minor
-release (0.4.0).
+release (0.5.0).
 
 Cut a patch release, without waiting for the next milestone, for:
 
@@ -33,7 +33,7 @@ maintenance branch.
 3. Commit, then tag and push:
 
     ```bash
-    git tag -a v0.3.1 -m "v0.3.1" && git push origin v0.3.1
+    git tag -a v0.4.0 -m "v0.4.0" && git push origin v0.4.0
     ```
 
 The Release workflow then:
@@ -44,7 +44,9 @@ The Release workflow then:
 3. pushes the image to GHCR and signs it with cosign (keyless, Sigstore),
 4. generates CycloneDX SBOMs and signed SLSA build provenance for the wheel, sdist and image,
 5. runs `wimi` on its own image and attaches the provenance report,
-6. creates the GitHub Release with every artifact and a `SHA256SUMS` file.
+6. creates the GitHub Release with every artifact, the signed provenance bundle and a `SHA256SUMS` file,
+7. publishes the wheel and source distribution to PyPI with trusted publishing, in the `pypi` environment. It runs
+   last because PyPI never lets a version be replaced. If only this job fails, re-run it; don't tag a new version.
 
 !!! warning
     The Release workflow refuses to publish if the tag does not match the package version, or if the image has a
