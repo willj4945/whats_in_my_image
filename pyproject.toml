@@ -11,6 +11,33 @@ license = "Apache-2.0"
 license-files = ["LICENSE", "NOTICE"]
 requires-python = ">=3.9"
 dependencies = []  # standard library only, so it installs on air-gapped hosts
+keywords = ["container", "docker", "oci", "sbom", "provenance", "supply-chain", "security", "devsecops", "iron-bank"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: System Administrators",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Security",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: System :: Software Distribution",
+]
+
+[project.urls]
+Homepage = "https://github.com/willj4945/whats_in_my_image"
+Documentation = "https://willj4945.github.io/whats_in_my_image/"
+Source = "https://github.com/willj4945/whats_in_my_image"
+Issues = "https://github.com/willj4945/whats_in_my_image/issues"
+Changelog = "https://github.com/willj4945/whats_in_my_image/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
 zstd = ["zstandard"]  # only needed for zstd-compressed layers on Python < 3.14

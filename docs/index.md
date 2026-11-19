@@ -91,10 +91,10 @@ replaces that assumption with evidence: layer digests, package databases, signin
 
 ## Try it
 
-=== "pip"
+=== "pipx"
 
     ```bash
-    pip install whats_in_my_image-0.3.1-py3-none-any.whl   # from the Releases page
+    pipx install whats-in-my-image
     wimi registry.example.mil/team/api:2.4 --scan
     ```
 
